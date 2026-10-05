@@ -1,0 +1,88 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    @apply bg-white font-sans text-[16px] leading-relaxed text-neutral-700;
+  }
+
+  /*
+    Warna judul mengikuti variabel --heading-color.
+    Default gelap; di dalam panel gelap (text-white / on-dark) otomatis putih;
+    di dalam kartu terang (bg-white / bg-neutral-50) kembali gelap.
+  */
+  :root {
+    --heading-color: theme('colors.neutral.900');
+  }
+
+  .text-white,
+  .on-dark {
+    --heading-color: theme('colors.white');
+  }
+
+  .bg-white,
+  .bg-neutral-50 {
+    --heading-color: theme('colors.neutral.900');
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    color: var(--heading-color);
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-ink-800;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-secondary-500 ring-offset-2;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+/* Satu-satunya animasi halaman depan: tiket "ditempel" ke papan pengumuman. */
+@keyframes tempel {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) rotate(var(--rot, 0deg)) scale(1.04);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(2px) rotate(var(--rot, 0deg)) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+}
+
+.tiket {
+  transform: rotate(var(--rot, 0deg));
+  animation: tempel 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tiket {
+    animation: none;
+  }
+}
