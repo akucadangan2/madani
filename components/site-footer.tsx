@@ -35,7 +35,7 @@ export default function SiteFooter() {
           <h3 className="text-sm font-bold text-slate-900">Kontak</h3>
           <p className="mt-3 text-sm leading-6 text-slate-600">
             <a href="mailto:info@rhgteknologiindonesia.id" className="hover:underline">
-              info@rhgteknologiindonesia.id
+              info@madani.id / info@rhgteknologiindonesia.id
             </a>
             <br />
             Menara The Plaza, Jl. M.H. Thamrin No.28-30, Menteng, Jakarta Pusat 10350
@@ -43,7 +43,7 @@ export default function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} PT RHG Teknologi Indonesia. Hak cipta dilindungi.
+        © {new Date().getFullYear()} Madani Berdaya. Hak cipta dilindungi.
       </div>
     </footer>
   )

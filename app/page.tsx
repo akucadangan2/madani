@@ -307,9 +307,9 @@ export default async function HomePage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/madani.png" alt="MADANI" className="h-8 w-auto self-start" />
           <div className="text-sm text-neutral-500">
-            <p>PT RHG Teknologi Indonesia, Bandar Lampung</p>
+            <p>Madani Berdaya</p>
             <a href="mailto:info@rhgteknologiindonesia.id" className="hover:text-ink-700">
-              info@rhgteknologiindonesia.id
+              info@rhgteknologiindonesia.id / info@madani.id
             </a>
           </div>
           <p className="text-sm text-neutral-400">© {new Date().getFullYear()} MADANI</p>
