@@ -4,6 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
+const MAKS_PERCOBAAN = 5;
+
+function normalizePhone(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  return digits.startsWith('62') ? `+${digits}` : `+62${digits.replace(/^0/, '')}`;
+}
+
 // Fallback: cari user di auth.users berdasarkan nomor HP (tanpa "+").
 async function findUserIdByPhone(supabase: AdminClient, normalizedPhone: string) {
   for (let page = 1; page <= 10; page++) {
@@ -18,18 +25,23 @@ async function findUserIdByPhone(supabase: AdminClient, normalizedPhone: string)
 
 export async function POST(request: NextRequest) {
   try {
-    const { phone, code, fullName } = await request.json();
-    if (!phone || !code) {
-      return NextResponse.json({ error: 'Nomor HP & kode wajib diisi' }, { status: 400 });
+    const body = await request.json().catch(() => null);
+    const phoneRaw = typeof body?.phone === 'string' ? body.phone : '';
+    const kode =
+      typeof body?.code === 'string' || typeof body?.code === 'number' ? String(body.code).trim() : '';
+    const fullName = typeof body?.fullName === 'string' ? body.fullName.trim().slice(0, 100) : '';
+    if (!phoneRaw || !kode) {
+      return NextResponse.json({ error: 'Nomor HP dan kode wajib diisi' }, { status: 400 });
     }
 
+    const phone = normalizePhone(phoneRaw);
     const supabase = createAdminClient();
 
+    // Ambil OTP terbaru yang masih berlaku untuk nomor ini (bukan dicari berdasarkan kode).
     const { data: otpRow } = await supabase
       .from('otp_codes')
-      .select('*')
+      .select('id, code')
       .eq('phone', phone)
-      .eq('code', code)
       .gte('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
@@ -39,8 +51,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Kode OTP salah atau sudah kedaluwarsa' }, { status: 400 });
     }
 
-    // Supabase nyimpen auth.users.phone tanpa tanda "+", jadi samain formatnya.
-    const normalizedPhone = String(phone).replace(/^\+/, '');
+    // Catat percobaan secara atomik SEBELUM membandingkan kode, supaya tebakan paralel ikut terhitung.
+    const { data: percobaan, error: errCoba } = await supabase.rpc('otp_catat_percobaan', {
+      p_id: otpRow.id,
+    });
+    if (errCoba) {
+      return NextResponse.json({ error: 'Terjadi kesalahan di server' }, { status: 500 });
+    }
+    const ke = typeof percobaan === 'number' ? percobaan : 1;
+    if (ke > MAKS_PERCOBAAN) {
+      await supabase.from('otp_codes').delete().eq('id', otpRow.id);
+      return NextResponse.json(
+        { error: 'Terlalu banyak percobaan. Minta kode OTP baru.' },
+        { status: 429 }
+      );
+    }
+    if (otpRow.code !== kode) {
+      const sisa = Math.max(MAKS_PERCOBAAN - ke, 0);
+      return NextResponse.json(
+        { error: `Kode OTP salah. Sisa percobaan: ${sisa}.` },
+        { status: 400 }
+      );
+    }
+
+    // Supabase menyimpan auth.users.phone tanpa tanda "+", jadi samakan formatnya.
+    const normalizedPhone = phone.replace(/^\+/, '');
 
     const { data: existingProfile } = await supabase
       .from('profiles')
@@ -54,7 +89,7 @@ export async function POST(request: NextRequest) {
       const { data: created, error: createError } = await supabase.auth.admin.createUser({
         phone,
         phone_confirm: true,
-        user_metadata: { full_name: fullName || '' },
+        user_metadata: { full_name: fullName },
       });
 
       if (createError) {
@@ -68,7 +103,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Password acak sekali pakai — nggak pernah disimpan/ditampilkan, cuma buat dapet session.
+    // Password acak sekali pakai: tidak pernah disimpan/ditampilkan, hanya untuk mendapat session.
     const tempPassword = crypto.randomUUID();
     const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
       password: tempPassword,
@@ -77,8 +112,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    // Sign-in pakai client anon TERPISAH, supaya client admin tidak berubah jadi sesi user
-    // (kalau berubah, delete otp_codes di bawah ditolak RLS dan OTP bisa dipakai ulang).
+    // Sign-in memakai client anon TERPISAH, supaya client admin tidak berubah jadi sesi user.
     const anon = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -95,7 +129,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // OTP baru dihapus setelah sesi berhasil dibuat.
+    // OTP dihapus setelah sesi berhasil dibuat (sekali pakai).
     await supabase.from('otp_codes').delete().eq('id', otpRow.id);
 
     return NextResponse.json({
