@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { createClient } from '@supabase/supabase-js';
 import {
   Briefcase, ShoppingBag, Smartphone, UserCheck, ScrollText, ChevronRight, ChevronDown,
   Search, Megaphone, Store, MessageCircle, Bell, Star, Wallet, LifeBuoy, MapPin,
@@ -12,6 +13,7 @@ export const dynamic = 'force-dynamic';
 
 const NAV = [
   { href: '#layanan', label: 'Layanan' },
+  { href: '#katalog', label: 'Katalog' },
   { href: '#untuk-siapa', label: 'Untuk siapa' },
   { href: '#cara-kerja', label: 'Cara kerja' },
   { href: '#aman', label: 'Keamanan' },
@@ -158,6 +160,92 @@ const FAQ: { q: string; a: string }[] = [
     a: 'Data dipakai hanya untuk menjalankan layanan. Foto KTP disimpan di penyimpanan privat. Penjelasan lengkap ada di halaman Kebijakan Privasi.',
   },
 ];
+
+/* ---------- Katalog publik (bisa dilihat tanpa login) ---------- */
+
+type Relasi<T> = T | T[] | null;
+type Lowongan = {
+  id: string;
+  judul: string;
+  upah: number | null;
+  created_at: string | null;
+  kategori: Relasi<{ nama: string }>;
+  kecamatan: Relasi<{ nama: string }>;
+};
+type ProdukRingkas = {
+  id: string;
+  nama: string;
+  harga: number | null;
+  stok: number | null;
+  foto_url: string | string[] | null;
+  toko: Relasi<{ nama_toko: string }>;
+};
+
+// Ubah dua baris ini kalau rute detail di web berbeda (nanti saya sesuaikan).
+const hrefLowongan = (id: string) => `/lowongan/${id}`;
+const hrefProduk = (id: string) => `/produk/${id}`;
+
+function satu<T>(v: Relasi<T>): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
+function rupiah(n: number | null) {
+  return `Rp${Math.round(n ?? 0).toLocaleString('id-ID')}`;
+}
+
+function waktuRelatif(iso: string | null) {
+  if (!iso) return '';
+  const menit = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (menit < 1) return 'baru saja';
+  if (menit < 60) return `${menit} mnt lalu`;
+  const jam = Math.floor(menit / 60);
+  if (jam < 24) return `${jam} jam lalu`;
+  const hari = Math.floor(jam / 24);
+  if (hari < 7) return `${hari} hari lalu`;
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+function fotoPertama(v: string | string[] | null): string | null {
+  const f = Array.isArray(v) ? v[0] : v;
+  return f && f.startsWith('http') ? f : null;
+}
+
+async function muatPublik() {
+  const kosong = { lowongan: [] as Lowongan[], produk: [] as ProdukRingkas[] };
+  try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!url || !key) return kosong;
+
+    const sb = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const [t, p] = await Promise.all([
+      sb
+        .from('tasks')
+        .select('id, judul, upah, created_at, kategori(nama), kecamatan(nama)')
+        .eq('status', 'terbuka')
+        .order('created_at', { ascending: false })
+        .limit(6),
+      sb
+        .from('produk')
+        .select('id, nama, harga, stok, foto_url, toko(nama_toko)')
+        .eq('status', 'aktif')
+        .order('created_at', { ascending: false })
+        .limit(8),
+    ]);
+    if (t.error) console.error('[landing] tasks:', t.error.message);
+    if (p.error) console.error('[landing] produk:', p.error.message);
+
+    return {
+      lowongan: (t.data ?? []) as unknown as Lowongan[],
+      produk: (p.data ?? []) as unknown as ProdukRingkas[],
+    };
+  } catch (e) {
+    console.error('[landing] gagal memuat katalog:', e);
+    return kosong;
+  }
+}
 
 /* ---------- Kartu contoh di papan hero ---------- */
 
@@ -426,6 +514,7 @@ function Desa() {
 export default async function HomePage() {
   const user = await getCurrentUser();
   if (user) redirect('/beranda');
+  const { lowongan, produk } = await muatPublik();
 
   return (
     <div className="min-h-screen overflow-x-clip bg-white">
@@ -496,6 +585,11 @@ export default async function HomePage() {
           >
             <Smartphone className="h-4 w-4 shrink-0" />
             Masuk lewat kode WhatsApp, tanpa password.
+          </p>
+          <p className="mt-2 text-sm">
+            <a href="#katalog" className="font-semibold text-secondary-700 underline">
+              Lihat lowongan dan produk tanpa login
+            </a>
           </p>
         </div>
 
@@ -579,7 +673,7 @@ export default async function HomePage() {
                 </li>
               ))}
             </ol>
-            <Link href="/kerja" className="mt-7 inline-flex rounded-full bg-white px-5 py-2.5 font-semibold text-secondary-700 hover:bg-secondary-50">
+            <Link href="/lowongan" className="mt-7 inline-flex rounded-full bg-white px-5 py-2.5 font-semibold text-secondary-700 hover:bg-secondary-50">
               Lihat lowongan
             </Link>
           </div>
@@ -604,10 +698,114 @@ export default async function HomePage() {
               ))}
             </dl>
             <p className="mt-2 text-xs text-ink-800/70">Contoh produk dan harga.</p>
-            <Link href="/marketplace" className="mt-5 inline-flex rounded-full bg-ink-800 px-5 py-2.5 font-semibold text-white hover:bg-ink-900">
+            <Link href="/produk" className="mt-5 inline-flex rounded-full bg-ink-800 px-5 py-2.5 font-semibold text-white hover:bg-ink-900">
               Lihat toko sekitar
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Katalog publik: bisa dilihat tanpa login */}
+      <section id="katalog" className="mx-auto max-w-6xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-20">
+        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
+          Lihat dulu, tanpa perlu login
+        </h2>
+        <p className="mt-3 max-w-xl text-neutral-600">
+          Lowongan dan produk terbaru dari warga sekitar. Kamu baru perlu daftar saat mau melamar atau memesan.
+        </p>
+
+        <div className="mt-8 flex items-end justify-between gap-3">
+          <h3 className="font-display text-xl font-bold text-ink-700">Lowongan terbaru</h3>
+          <Link href="/lowongan" className="shrink-0 text-sm font-semibold text-secondary-700 hover:underline">
+            Lihat semua
+          </Link>
+        </div>
+        {lowongan.length === 0 ? (
+          <p className="mt-4 rounded-2xl bg-ink-50 p-5 text-neutral-600">
+            Belum ada lowongan terbuka saat ini. Coba lihat lagi nanti, atau daftar untuk memasang lowongan pertamamu.
+          </p>
+        ) : (
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {lowongan.map((t) => {
+              const info = [satu(t.kategori)?.nama, satu(t.kecamatan)?.nama].filter(Boolean).join(' · ');
+              return (
+                <li key={t.id}>
+                  <Link
+                    href={hrefLowongan(t.id)}
+                    className="block h-full rounded-2xl border border-neutral-200 bg-white p-4 transition hover:border-ink-700"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-500/10 text-secondary-700">
+                        <Briefcase className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 font-display text-base font-bold leading-snug text-ink-700">{t.judul}</p>
+                        {info && <p className="mt-1 truncate text-sm text-neutral-500">{info}</p>}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="rounded-md bg-sun-400 px-2 py-0.5 text-sm font-bold text-ink-800">{rupiah(t.upah)}</span>
+                      <span className="text-xs text-neutral-500">{waktuRelatif(t.created_at)}</span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <div className="mt-10 flex items-end justify-between gap-3">
+          <h3 className="font-display text-xl font-bold text-ink-700">Produk terbaru</h3>
+          <Link href="/produk" className="shrink-0 text-sm font-semibold text-secondary-700 hover:underline">
+            Lihat semua
+          </Link>
+        </div>
+        {produk.length === 0 ? (
+          <p className="mt-4 rounded-2xl bg-ink-50 p-5 text-neutral-600">
+            Belum ada produk saat ini. Coba lihat lagi nanti, atau daftar untuk membuka tokomu.
+          </p>
+        ) : (
+          <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {produk.map((p) => {
+              const foto = fotoPertama(p.foto_url);
+              const habis = (p.stok ?? 0) <= 0;
+              return (
+                <li key={p.id}>
+                  <Link
+                    href={hrefProduk(p.id)}
+                    className="block h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-ink-700"
+                  >
+                    <div className="relative aspect-square bg-ink-50">
+                      {foto ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={foto} alt={p.nama} loading="lazy" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-neutral-400">
+                          <ShoppingBag className="h-8 w-8" />
+                        </span>
+                      )}
+                      {habis && (
+                        <span className="absolute left-2 top-2 rounded bg-white px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                          Habis
+                        </span>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="line-clamp-2 text-sm font-bold leading-snug text-ink-700">{p.nama}</p>
+                      <p className="mt-1 font-display text-base font-bold text-ink-700">{rupiah(p.harga)}</p>
+                      <p className="mt-0.5 truncate text-xs text-neutral-500">{satu(p.toko)?.nama_toko ?? ''}</p>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <div className="mt-8">
+          <Link href="/register" className="inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
+            Mau melamar atau memesan? Daftar gratis
+          </Link>
         </div>
       </section>
 
