@@ -59,7 +59,7 @@
   }
 }
 
-/* Satu-satunya animasi halaman depan: tiket "ditempel" ke papan pengumuman. */
+/* Halaman depan: tiket "ditempel" ke papan contoh. */
 @keyframes tempel {
   0% {
     opacity: 0;
@@ -85,4 +85,82 @@
   .tiket {
     animation: none;
   }
+}
+
+/* ===== Animasi desa (halaman depan) ===== */
+.desa-lapis {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+  animation: desa-geser var(--dur, 30s) linear infinite;
+}
+.desa-lapis > svg {
+  height: 100%;
+  width: auto;
+  flex: none;
+  display: block;
+}
+@keyframes desa-geser {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.desa-kaki-a, .desa-kaki-b, .desa-tangan, .desa-tangan-d {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+.desa-kaki-a { animation: desa-ayun 0.5s ease-in-out infinite; }
+.desa-kaki-b { animation: desa-ayun 0.5s ease-in-out infinite reverse; }
+.desa-tangan { animation: desa-ayun 0.5s ease-in-out infinite reverse; }
+.desa-tangan-d { animation: desa-ayun 0.5s ease-in-out infinite; }
+@keyframes desa-ayun {
+  0%, 100% { transform: rotate(34deg); }
+  50% { transform: rotate(-34deg); }
+}
+
+.desa-badan { animation: desa-loncat 0.125s ease-in-out infinite alternate; }
+@keyframes desa-loncat {
+  from { transform: translateY(0); }
+  to { transform: translateY(-0.6px); }
+}
+
+.desa-koin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: desa-putar 1.6s ease-in-out infinite;
+}
+@keyframes desa-putar {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.25); }
+}
+
+.desa-pop {
+  opacity: 0;
+  animation: desa-pop 2.6s ease-out infinite;
+}
+@keyframes desa-pop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.6); }
+  15% { opacity: 1; }
+  70% { opacity: 1; transform: translateY(-18px) scale(1); }
+  100% { opacity: 0; transform: translateY(-26px); }
+}
+
+.desa-naik {
+  opacity: 0;
+  animation: desa-naik 0.7s ease-out forwards;
+  animation-delay: var(--d, 0ms);
+}
+@keyframes desa-naik {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Kalau pengunjung mematikan animasi di perangkatnya:
+   tetap bergerak, tapi lebih pelan dan lembut */
+@media (prefers-reduced-motion: reduce) {
+  .desa-lapis { animation-duration: calc(var(--dur, 30s) * 3); }
+  .desa-kaki-a, .desa-kaki-b, .desa-tangan, .desa-tangan-d { animation-duration: 0.9s; }
+  .desa-badan { animation-duration: 0.22s; }
+  .desa-naik { opacity: 1; animation: none; }
 }
