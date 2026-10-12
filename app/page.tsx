@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { createClient } from '@supabase/supabase-js';
+import { Maskot } from '@/components/maskot';
 import {
   Briefcase, ShoppingBag, Smartphone, UserCheck, ScrollText, ChevronRight, ChevronDown,
   Search, Megaphone, Store, MessageCircle, Bell, Star, Wallet, LifeBuoy, MapPin,
@@ -181,7 +182,6 @@ type ProdukRingkas = {
   toko: Relasi<{ nama_toko: string }>;
 };
 
-// Ubah dua baris ini kalau rute detail di web berbeda (nanti saya sesuaikan).
 const hrefLowongan = (id: string) => `/lowongan/${id}`;
 const hrefProduk = (id: string) => `/produk/${id}`;
 
@@ -591,6 +591,7 @@ export default async function HomePage() {
               Lihat lowongan dan produk tanpa login
             </a>
           </p>
+          <Maskot pose="sapa" cepat className="mt-6 h-44 w-auto sm:h-56" />
         </div>
 
         {/* Contoh tampilan */}
@@ -657,8 +658,9 @@ export default async function HomePage() {
           Dua layanan dalam satu aplikasi
         </h2>
 
-        <div className="mt-8 grid gap-4 md:grid-cols-12">
-          <div className="rounded-[24px] bg-secondary-700 p-6 text-white sm:rounded-[28px] md:col-span-7 md:p-10">
+        <div className="mt-24 grid gap-24 md:grid-cols-12 md:gap-4">
+          <div className="relative rounded-[24px] bg-secondary-700 p-6 text-white sm:rounded-[28px] md:col-span-7 md:p-10">
+            <Maskot pose="semangat" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
             <Briefcase className="h-7 w-7 text-secondary-200" />
             <h3 className="mt-5 text-2xl font-extrabold leading-tight text-white sm:text-3xl">Kerja harian</h3>
             <p className="mt-3 max-w-md text-secondary-100">
@@ -678,7 +680,8 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="rounded-[24px] bg-primary-500 p-6 text-ink-900 sm:rounded-[28px] md:col-span-5 md:p-10">
+          <div className="relative rounded-[24px] bg-primary-500 p-6 text-ink-900 sm:rounded-[28px] md:col-span-5 md:p-10">
+            <Maskot pose="digital" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
             <ShoppingBag className="h-7 w-7 text-ink-800" />
             <h3 className="mt-5 text-2xl font-extrabold leading-tight text-ink-900 sm:text-3xl">Belanja sekitar</h3>
             <p className="mt-3 text-ink-800">
@@ -721,9 +724,12 @@ export default async function HomePage() {
           </Link>
         </div>
         {lowongan.length === 0 ? (
-          <p className="mt-4 rounded-2xl bg-ink-50 p-5 text-neutral-600">
-            Belum ada lowongan terbuka saat ini. Coba lihat lagi nanti, atau daftar untuk memasang lowongan pertamamu.
-          </p>
+          <div className="mt-4 flex items-center gap-4 rounded-2xl bg-ink-50 p-5">
+            <Maskot pose="berpikir" goyang={false} className="h-24 w-auto shrink-0" />
+            <p className="text-neutral-600">
+              Belum ada lowongan terbuka saat ini. Coba lihat lagi nanti, atau daftar untuk memasang lowongan pertamamu.
+            </p>
+          </div>
         ) : (
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {lowongan.map((t) => {
@@ -761,9 +767,12 @@ export default async function HomePage() {
           </Link>
         </div>
         {produk.length === 0 ? (
-          <p className="mt-4 rounded-2xl bg-ink-50 p-5 text-neutral-600">
-            Belum ada produk saat ini. Coba lihat lagi nanti, atau daftar untuk membuka tokomu.
-          </p>
+          <div className="mt-4 flex items-center gap-4 rounded-2xl bg-ink-50 p-5">
+            <Maskot pose="berpikir" goyang={false} className="h-24 w-auto shrink-0" />
+            <p className="text-neutral-600">
+              Belum ada produk saat ini. Coba lihat lagi nanti, atau daftar untuk membuka tokomu.
+            </p>
+          </div>
         ) : (
           <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {produk.map((p) => {
@@ -974,6 +983,7 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="md:justify-self-end">
+            <Maskot pose="bersama" className="mb-4 block h-40 w-auto md:ml-auto" />
             <a
               href="mailto:info@rhgteknologiindonesia.id?subject=Mitra%20Kecamatan%20MADANI"
               className="inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 md:w-auto"
@@ -986,7 +996,10 @@ export default async function HomePage() {
 
       {/* FAQ */}
       <section id="faq" className="mx-auto max-w-3xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-24">
-        <h2 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">Pertanyaan yang sering muncul</h2>
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">Pertanyaan yang sering muncul</h2>
+          <Maskot pose="tunjuk" className="h-32 w-auto shrink-0 sm:h-40" />
+        </div>
         <div className="mt-8 divide-y divide-neutral-200 border-y border-neutral-200">
           {FAQ.map((f) => (
             <details key={f.q} className="group py-1">
@@ -1038,6 +1051,7 @@ export default async function HomePage() {
                 </li>
               ))}
             </ol>
+            <Maskot pose="percaya" className="mt-8 h-56 w-auto" />
           </div>
 
           <ul className="divide-y divide-white/15 self-center border-y border-white/15">
@@ -1054,6 +1068,44 @@ export default async function HomePage() {
         </div>
       </section>
 
+            {/* Footer */}
+      <footer className="bg-ink-800 py-10 text-sm text-white/70">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-5 md:grid-cols-[1.4fr_1fr_1fr]">
+          <div>
+            <p className="font-display text-lg font-bold text-white">MADANI</p>
+            <p className="mt-2 max-w-xs">
+              Marketplace tenaga kerja harian dan barang berbasis kecamatan.
+            </p>
+            <p className="mt-3">
+              Email:{' '}
+              <a href="mailto:info@rhgteknologiindonesia.id" className="underline hover:text-white">
+                info@rhgteknologiindonesia.id
+              </a>
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold text-white">Jelajahi</p>
+            <ul className="mt-3 space-y-2">
+              <li><Link href="/lowongan" className="hover:text-white">Lowongan kerja</Link></li>
+              <li><Link href="/produk" className="hover:text-white">Produk</Link></li>
+              <li><Link href="/register" className="hover:text-white">Daftar gratis</Link></li>
+              <li><Link href="/login" className="hover:text-white">Masuk</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="font-semibold text-white">Informasi</p>
+            <ul className="mt-3 space-y-2">
+              <li><Link href="/syarat" className="hover:text-white">Syarat dan Ketentuan</Link></li>
+              <li><Link href="/refund" className="hover:text-white">Kebijakan Refund</Link></li>
+              <li><Link href="/privasi" className="hover:text-white">Kebijakan Privasi</Link></li>
+              <li><Link href="/kontak" className="hover:text-white">Hubungi kami</Link></li>
+              <li><Link href="/hapus-akun" className="hover:text-white">Hapus akun</Link></li>
+            </ul>
+          </div>
+        </div>
+        <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-white/40 sm:px-5">© MADANI. Seluruh hak dilindungi.</p>
+      </footer>
+
       {/* Penutup */}
       <section className="bg-ink-700 pb-16 pt-2 text-white sm:pb-20">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 sm:px-5 md:flex-row md:items-center">
@@ -1069,6 +1121,7 @@ export default async function HomePage() {
               Sebagian fitur, termasuk pembayaran, masih dalam tahap uji coba bertahap.
             </p>
           </div>
+          <Maskot pose="jempol" className="h-32 w-auto shrink-0 md:h-44" />
           <Link href="/register" className="w-full rounded-full bg-primary-400 px-8 py-4 text-center font-semibold text-ink-900 hover:bg-primary-300 md:w-auto">
             Daftar gratis
           </Link>

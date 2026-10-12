@@ -164,3 +164,12 @@
   .desa-badan { animation-duration: 0.22s; }
   .desa-naik { opacity: 1; animation: none; }
 }
+/* Maskot: gerak naik turun pelan */
+@keyframes maskot-naik-turun {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.maskot-goyang { animation: maskot-naik-turun 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .maskot-goyang { animation: none; }
+}

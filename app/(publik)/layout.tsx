@@ -48,8 +48,11 @@ export default async function PublikLayout({ children }: { children: React.React
       <footer className="border-t border-neutral-200 py-6 text-sm text-neutral-500">
         <div className="mx-auto flex max-w-6xl flex-wrap gap-x-5 gap-y-2 px-4 sm:px-5">
           <span>© MADANI</span>
+          <Link href="/lowongan" className="hover:text-ink-700">Lowongan</Link>
+          <Link href="/produk" className="hover:text-ink-700">Produk</Link>
+          <Link href="/syarat" className="hover:text-ink-700">Syarat dan Ketentuan</Link>
+          <Link href="/refund" className="hover:text-ink-700">Kebijakan Refund</Link>
           <Link href="/privasi" className="hover:text-ink-700">Kebijakan Privasi</Link>
-          <Link href="/syarat" className="hover:text-ink-700">Syarat</Link>
           <Link href="/kontak" className="hover:text-ink-700">Kontak</Link>
           <Link href="/hapus-akun" className="hover:text-ink-700">Hapus Akun</Link>
         </div>
