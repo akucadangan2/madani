@@ -52,7 +52,8 @@ export async function POST(req: Request) {
       callbackUrl: `${SITE}/bayar/selesai?ref=${encodeURIComponent(baris.ref)}`,
     });
     return NextResponse.json({ url, ref: baris.ref });
-  } catch {
+  } catch (e) {
+    console.error('[doku] /api/bayar gagal:', e instanceof Error ? e.message : e);
     return NextResponse.json({ error: 'Layanan pembayaran sedang bermasalah, coba lagi' }, { status: 502 });
   }
 }
