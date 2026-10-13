@@ -68,7 +68,7 @@ export async function buatCheckout(p: {
   const url = j.response?.payment?.url;
   if (!res.ok || typeof url !== 'string') {
     console.error('[doku] gagal membuat checkout', res.status, teks.slice(0, 500));
-    throw new Error('Gagal membuat halaman pembayaran');
+    throw new Error(`Gagal membuat halaman pembayaran (DOKU ${res.status}): ${teks.slice(0, 300)}`);
   }
   return { url, expired: j.response?.payment?.expired_date };
 }
