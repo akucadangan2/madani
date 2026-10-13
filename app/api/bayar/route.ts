@@ -53,8 +53,7 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ url, ref: baris.ref });
   } catch (e) {
-    const pesan = e instanceof Error ? e.message : String(e);
-    console.error('[doku] /api/bayar gagal:', pesan);
-    return NextResponse.json({ error: pesan }, { status: 502 });
+    console.error('[doku] /api/bayar gagal:', e instanceof Error ? e.message : String(e));
+    return NextResponse.json({ error: 'Layanan pembayaran sedang bermasalah, coba lagi' }, { status: 502 });
   }
 }
