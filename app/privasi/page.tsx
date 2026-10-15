@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: 'Kebijakan Privasi | MADANI' }
 
 export default function Page() {
   return (
-    <LegalLayout judul="Kebijakan Privasi" diperbarui="6 Oktober 2026">
+    <LegalLayout judul="Kebijakan Privasi" diperbarui="15 Oktober 2026">
       <p>
         Kebijakan ini menjelaskan bagaimana PT RHG Teknologi Indonesia (“kami”) selaku pengendali data
         pribadi mengumpulkan, menggunakan, dan melindungi data pribadi kamu saat memakai MADANI, baik
@@ -19,15 +19,22 @@ export default function Page() {
         <li><b>Akun:</b> nama dan nomor WhatsApp. Kamu masuk memakai kode OTP yang dikirim lewat WhatsApp.</li>
         <li><b>Verifikasi identitas (opsional, wajib untuk fitur tertentu):</b> nomor KTP, foto KTP, dan foto selfie.</li>
         <li><b>Transaksi:</b> pesanan, keranjang, alamat pengiriman, lamaran dan pekerjaan, ulasan, saldo, dan riwayat penarikan dana.</li>
+        <li><b>Alamat tersimpan:</b> nama penerima, nomor telepon penerima, alamat, catatan alamat, dan titik lokasi di peta bila kamu memilihnya.</li>
         <li><b>Konten buatan kamu:</b> nama dan foto toko atau produk, deskripsi, serta pesan chat dengan pengguna lain.</li>
         <li><b>Data teknis:</b> token notifikasi perangkat, alamat IP, dan catatan percobaan OTP untuk keamanan akun.</li>
-        <li><b>Wilayah:</b> kecamatan yang kamu pilih. Aplikasi tidak meminta akses lokasi GPS.</li>
+        <li>
+          <b>Lokasi:</b> kecamatan yang kamu pilih. Di aplikasi, akses lokasi (GPS) hanya diminta saat kamu
+          menekan tombol untuk memakai lokasi saat ini ketika mengisi alamat. Titik lokasi disimpan sebagai
+          bagian dari alamat tersimpan milikmu dan disertakan pada pesanan sehingga penjual dapat mengantar
+          barang. Kami tidak melacak lokasimu di latar belakang.
+        </li>
       </ul>
 
       <h2>2. Untuk apa data dipakai</h2>
       <ul>
         <li>Membuat dan mengamankan akun, serta mengirim OTP.</li>
         <li>Menjalankan transaksi: mempertemukan pembeli, penjual, pemberi kerja, dan pencari kerja, termasuk penahanan dana (escrow) dan pencairan.</li>
+        <li>Menyimpan alamat dan titik lokasi agar pengisian alamat pengiriman lebih cepat.</li>
         <li>Verifikasi identitas untuk mencegah penipuan.</li>
         <li>Mengirim notifikasi tentang pesanan, pesan, lamaran, dan pembaruan akun.</li>
         <li>Menangani komplain, laporan pelanggaran, dan permintaan bantuan.</li>
@@ -42,9 +49,9 @@ export default function Page() {
 
       <h2>4. Dengan siapa data dibagikan</h2>
       <ul>
-        <li><b>Pengguna lain:</b> nama, nama toko, konten produk atau pekerjaan, ulasan, dan pesan chat hanya kepada pihak yang terlibat atau sesuai tampilan publik.</li>
-        <li><b>Penyedia layanan teknologi:</b> Supabase (basis data dan penyimpanan), Vercel (hosting situs), Fonnte (pengiriman OTP WhatsApp), dan Google Firebase Cloud Messaging (notifikasi).</li>
-        <li><b>Penyedia pembayaran:</b> akan ditambahkan ketika pembayaran daring diaktifkan, dan kebijakan ini akan diperbarui.</li>
+        <li><b>Pengguna lain:</b> nama, nama toko, konten produk atau pekerjaan, ulasan, dan pesan chat hanya kepada pihak yang terlibat atau sesuai tampilan publik. Alamat pengiriman beserta titik lokasinya dibagikan kepada penjual yang memproses pesananmu.</li>
+        <li><b>Penyedia layanan teknologi:</b> Supabase (basis data dan penyimpanan), Vercel (hosting situs), Fonnte (pengiriman OTP WhatsApp), Google Firebase Cloud Messaging (notifikasi), serta OpenStreetMap dan layanan geokode bawaan perangkat (tampilan peta dan penerjemahan titik lokasi menjadi alamat).</li>
+        <li><b>Penyedia pembayaran:</b> DOKU, untuk memproses pembayaran daring. Yang kami kirim ke DOKU hanya nomor tagihan dan nominal. Data kartu, e-wallet, atau akun bank kamu dimasukkan langsung di halaman pembayaran DOKU dan tidak disimpan oleh kami.</li>
         <li><b>Pihak berwenang:</b> bila diwajibkan oleh hukum atau perintah yang sah.</li>
       </ul>
       <p>Kami tidak menjual data pribadi kamu.</p>
@@ -65,9 +72,9 @@ export default function Page() {
       <h2>7. Berapa lama data disimpan</h2>
       <p>
         Data akun disimpan selama akun aktif. Setelah kamu menghapus akun, data pribadi seperti nama, nomor
-        telepon, foto KTP dan selfie, token notifikasi, dan isi chat dihapus atau dianonimkan. Catatan
-        transaksi, laporan, dan data lain yang wajib kami simpan menurut peraturan perundang-undangan
-        disimpan tanpa identitas yang dapat mengenali kamu, selama diwajibkan.
+        telepon, alamat tersimpan, foto KTP dan selfie, token notifikasi, dan isi chat dihapus atau
+        dianonimkan. Catatan transaksi, laporan, dan data lain yang wajib kami simpan menurut peraturan
+        perundang-undangan disimpan tanpa identitas yang dapat mengenali kamu, selama diwajibkan.
       </p>
 
       <h2>8. Hak kamu</h2>

@@ -76,7 +76,7 @@ function Sidebar({
   return (
     <div className="flex h-full flex-col bg-ink-900 text-white">
       <div className="flex items-center gap-3 px-5 py-5">
-        <Image src="/madani.png" alt="MADANI" width={36} height={36} className="rounded-lg bg-white p-0.5" />
+        <Image src="/logo.png" alt="MADANI" width={36} height={36} className="rounded-lg bg-white p-0.5" />
         <div>
           <div className="font-display text-lg font-bold leading-none text-white">MADANI</div>
           <div className="mt-1 text-[11px] uppercase tracking-wider text-white/50">Panel Admin</div>

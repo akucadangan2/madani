@@ -15,16 +15,17 @@ export default function SiteFooter() {
       <div className="mx-auto grid max-w-5xl gap-8 px-5 py-10 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-2 font-bold text-slate-900">
-            <Image src="/madani.png" alt="MADANI" width={28} height={28} />
+            <Image src="/logo.png" alt="MADANI" width={28} height={28} />
             MADANI
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-600">
-            Marketplace kecamatan untuk pekerjaan dan barang. Dikelola oleh PT RHG Teknologi Indonesia.
+            Marketplace kecamatan untuk pekerjaan dan barang. Dikembangkan oleh Sharee Management Group.
           </p>
         </div>
         <div>
           <h3 className="text-sm font-bold text-slate-900">Informasi</h3>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
+            <li><Link href="/faq" className="hover:underline">FAQ</Link></li>
             <li><Link href="/privasi" className="hover:underline">Kebijakan Privasi</Link></li>
             <li><Link href="/syarat" className="hover:underline">Syarat dan Ketentuan</Link></li>
             <li><Link href="/hapus-akun" className="hover:underline">Hapus Akun</Link></li>
@@ -38,7 +39,7 @@ export default function SiteFooter() {
               info@madani.id / info@rhgteknologiindonesia.id
             </a>
             <br />
-            Menara The Plaza, Jl. M.H. Thamrin No.28-30, Menteng, Jakarta Pusat 10350
+            Jl. Kasnariansyah No 1500 Palembang Sumatera Selatan 30128
           </p>
         </div>
       </div>

@@ -37,7 +37,7 @@ export default async function BagiHasilPage() {
                     name="persentase_provider"
                     min={0}
                     max={100}
-                    defaultValue={existing?.persentase_provider ?? 10}
+                    defaultValue={existing?.persentase_provider ?? 7}
                     className="mt-1 w-full rounded border border-neutral-300 px-2 py-1"
                   />
                 </label>
@@ -48,7 +48,7 @@ export default async function BagiHasilPage() {
                     name="persentase_pekerja_penjual"
                     min={0}
                     max={100}
-                    defaultValue={existing?.persentase_pekerja_penjual ?? 80}
+                    defaultValue={existing?.persentase_pekerja_penjual ?? 90}
                     className="mt-1 w-full rounded border border-neutral-300 px-2 py-1"
                   />
                 </label>
@@ -59,7 +59,7 @@ export default async function BagiHasilPage() {
                     name="persentase_kecamatan"
                     min={0}
                     max={100}
-                    defaultValue={existing?.persentase_kecamatan ?? 10}
+                    defaultValue={existing?.persentase_kecamatan ?? 3}
                     className="mt-1 w-full rounded border border-neutral-300 px-2 py-1"
                   />
                 </label>

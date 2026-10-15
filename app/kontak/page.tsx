@@ -9,10 +9,11 @@ export default function Page() {
     <LegalLayout judul="Hubungi Kami">
       <p>Ada pertanyaan, kendala, atau laporan penyalahgunaan? Tim kami siap membantu.</p>
 
-      <h2>PT RHG Teknologi Indonesia</h2>
+      <h2>MADANI</h2>
       <p>
+        Dikembangkan oleh Sharee Management Group.<br />
         Email: <a href="mailto:info@rhgteknologiindonesia.id">info@rhgteknologiindonesia.id</a><br />
-        Alamat: Menara The Plaza, Jl. M.H. Thamrin No.28-30, Menteng, Jakarta Pusat 10350
+        Alamat: Jl. Kasnariansyah No 1500 Palembang Sumatera Selatan 30128
       </p>
 
       <h2>Melaporkan konten atau pengguna</h2>

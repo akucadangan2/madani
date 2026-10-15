@@ -3,22 +3,20 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { createClient } from '@supabase/supabase-js';
 import { Maskot } from '@/components/maskot';
+import { LogoM } from '@/components/logo-m';
 import {
-  Briefcase, ShoppingBag, Smartphone, UserCheck, ScrollText, ChevronRight, ChevronDown,
-  Search, Megaphone, Store, MessageCircle, Bell, Star, Wallet, LifeBuoy, MapPin,
-  ShieldCheck, BadgeCheck, Landmark, Hammer, Truck, Sprout, GraduationCap, Lock,
-  Flag, Ban, Eye, Users, Receipt, Trash2,
+  Briefcase, ShoppingBag, Smartphone, ChevronRight,
+  Search, Megaphone, Store, MapPin, BadgeCheck, Landmark,
+  Hammer, Sprout, GraduationCap, Receipt,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 const NAV = [
-  { href: '#layanan', label: 'Layanan' },
   { href: '#katalog', label: 'Katalog' },
+  { href: '#layanan', label: 'Layanan' },
   { href: '#untuk-siapa', label: 'Untuk siapa' },
   { href: '#cara-kerja', label: 'Cara kerja' },
-  { href: '#aman', label: 'Keamanan' },
-  { href: '#faq', label: 'FAQ' },
 ];
 
 const NILAI = [
@@ -32,13 +30,13 @@ const PERAN = [
   {
     icon: Search,
     judul: 'Pencari kerja',
-    isi: 'Cari pekerjaan harian dekat rumah dan lamar langsung dari HP.',
+    isi: 'Cari pekerjaan dekat rumah dan lamar langsung dari HP.',
     poin: ['Lowongan di kecamatanmu', 'Lamar kapan saja dari HP', 'Rating membangun reputasimu'],
   },
   {
     icon: Megaphone,
     judul: 'Pemberi kerja',
-    isi: 'Pasang lowongan, pilih pekerja yang cocok, dan pantau pekerjaannya.',
+    isi: 'Cari pekerja/pasang lowongan, pilih pekerja yang cocok, dan pantau pekerjaannya.',
     poin: ['Posting dalam hitungan menit', 'Bandingkan para pelamar', 'Status pekerjaan jelas'],
   },
   {
@@ -80,7 +78,7 @@ const CERITA = [
 
 const ALUR_KERJA = [
   { judul: 'Daftar dan pilih peran', isi: 'Masuk dengan kode WhatsApp, lalu pilih pencari kerja atau pemberi kerja.' },
-  { judul: 'Cari atau pasang lowongan', isi: 'Pencari kerja melamar. Pemberi kerja menulis judul, upah, dan lokasi.' },
+  { judul: 'Cari lowongan atau cari pekerja/pasang lowongan', isi: 'Pencari kerja melamar. Pemberi kerja menulis judul, upah, dan lokasi.' },
   { judul: 'Pilih pelamar', isi: 'Pemberi kerja memilih satu pelamar yang paling cocok.' },
   { judul: 'Kerjakan dan tetap terhubung', isi: 'Koordinasi jadwal dan lokasi lewat chat di dalam aplikasi.' },
   { judul: 'Selesai dan beri rating', isi: 'Pemberi kerja menandai selesai, lalu kedua pihak saling menilai.' },
@@ -92,74 +90,6 @@ const ALUR_BELANJA = [
   { judul: 'Pembeli memesan', isi: 'Pilih produk, masukkan keranjang, lalu checkout.' },
   { judul: 'Pesanan diproses', isi: 'Penjual menyiapkan dan mengantar pesanan ke pembeli.' },
   { judul: 'Terima dan beri ulasan', isi: 'Pembeli mengonfirmasi barang diterima dan boleh menulis ulasan.' },
-];
-
-const FITUR = [
-  { icon: MapPin, judul: 'Papan per kecamatan', isi: 'Lowongan dan toko yang tampil adalah milik warga di wilayahmu.' },
-  { icon: MessageCircle, judul: 'Chat langsung', isi: 'Tanya penjual atau ngobrol dengan pemberi kerja sebelum sepakat.' },
-  { icon: Bell, judul: 'Notifikasi', isi: 'Pesan, pesanan, dan lamaran baru masuk ke HP-mu.' },
-  { icon: Star, judul: 'Ulasan dan rating', isi: 'Penilaian dari pengguna lain membantu memilih dengan yakin.' },
-  { icon: Wallet, judul: 'Saldo dan riwayat', isi: 'Lihat saldo dan riwayat transaksimu di satu halaman.' },
-  { icon: LifeBuoy, judul: 'Komplain dan bantuan', isi: 'Ada masalah? Ajukan komplain, tim kami bantu tinjau.' },
-  { icon: UserCheck, judul: 'Verifikasi KTP', isi: 'Foto KTP dipakai untuk verifikasi dan disimpan di tempat privat.' },
-  { icon: Ban, judul: 'Lapor dan blokir', isi: 'Laporkan konten bermasalah atau blokir pengguna dari menu titik tiga.' },
-  { icon: Eye, judul: 'Lihat dulu, daftar belakangan', isi: 'Jelajahi lowongan dan produk tanpa harus login lebih dulu.' },
-];
-
-const AMAN = [
-  { icon: UserCheck, judul: 'Verifikasi KTP', isi: 'Fitur seperti melamar kerja dan penarikan saldo meminta verifikasi KTP lebih dulu.' },
-  { icon: Smartphone, judul: 'Masuk lewat WhatsApp', isi: 'Kode sekali pakai dikirim ke nomormu, jadi tidak ada password yang bisa bocor.' },
-  { icon: Flag, judul: 'Laporan ditinjau', isi: 'Laporan konten atau pengguna mencurigakan kami tinjau paling lambat 24 jam.' },
-  { icon: Ban, judul: 'Blokir pengguna', isi: 'Pengguna yang tidak ingin kamu temui bisa diblokir kapan saja.' },
-  { icon: ScrollText, judul: 'Aktivitas tercatat', isi: 'Setiap transaksi punya catatan yang bisa diperiksa kalau ada perselisihan.' },
-  { icon: Trash2, judul: 'Hapus akun kapan saja', isi: 'Kamu bisa menghapus akun sendiri dari menu Akun atau halaman Hapus Akun.' },
-];
-
-const FAQ: { q: string; a: string }[] = [
-  {
-    q: 'Apakah MADANI gratis?',
-    a: 'Daftar dan membuka toko gratis. Pada transaksi, ada pembagian bawaan: 10% untuk platform, 80% untuk pekerja atau penjual, dan 10% untuk kecamatan. Angka ini bisa diatur per kecamatan.',
-  },
-  {
-    q: 'Bagaimana cara masuk?',
-    a: 'Masukkan nomor WhatsApp, lalu isi kode OTP yang kami kirim. Tidak ada password yang perlu diingat.',
-  },
-  {
-    q: 'Apakah harus pasang aplikasi?',
-    a: 'Tidak harus. MADANI bisa dipakai lewat browser di HP maupun laptop. Aplikasi Android dan iOS sedang disiapkan.',
-  },
-  {
-    q: 'Kenapa perlu verifikasi KTP?',
-    a: 'Untuk melamar kerja, membayar, atau menarik saldo, kami meminta verifikasi KTP supaya penipuan sulit terjadi. Foto KTP disimpan di penyimpanan privat dan hanya dilihat admin untuk verifikasi.',
-  },
-  {
-    q: 'Kapan sebuah transaksi dianggap selesai?',
-    a: 'Untuk pesanan barang, setelah pembeli mengonfirmasi barang diterima. Untuk pekerjaan, setelah pemberi kerja menandai pekerjaan selesai. Setelah itu kedua pihak bisa saling memberi penilaian.',
-  },
-  {
-    q: 'Bagaimana dengan pembayaran dan saldo?',
-    a: 'Fitur pembayaran dan saldo saat ini masih dalam tahap uji coba bertahap. Metode pembayaran resmi akan diumumkan setelah aktif.',
-  },
-  {
-    q: 'Bagaimana kalau ada masalah?',
-    a: 'Ajukan komplain lewat aplikasi, tim kami akan meninjau dan membantu menyelesaikannya. Konten atau pengguna mencurigakan bisa dilaporkan lewat tombol Laporkan.',
-  },
-  {
-    q: 'Apakah barang kena ongkir ekspedisi?',
-    a: 'Tidak. Barang diantar penjual satu kecamatan, jadi tanpa ongkir ekspedisi. Kesepakatan antar dilakukan lewat chat dengan penjual.',
-  },
-  {
-    q: 'Bisa jadi pembeli sekaligus penjual?',
-    a: 'Bisa. Satu akun boleh punya beberapa peran dan kamu tinggal berpindah peran dari menu Akun.',
-  },
-  {
-    q: 'Kecamatanku belum tersedia, bagaimana?',
-    a: 'Wilayah ditambahkan oleh tim MADANI. Hubungi kami lewat halaman Kontak untuk mengajukan kecamatanmu.',
-  },
-  {
-    q: 'Apakah data pribadiku aman?',
-    a: 'Data dipakai hanya untuk menjalankan layanan. Foto KTP disimpan di penyimpanan privat. Penjelasan lengkap ada di halaman Kebijakan Privasi.',
-  },
 ];
 
 /* ---------- Katalog publik (bisa dilihat tanpa login) ---------- */
@@ -522,8 +452,7 @@ export default async function HomePage() {
       <header className="sticky top-0 z-30 border-b border-neutral-200/70 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-5">
           <Link href="/" className="shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/madani.png" alt="MADANI" className="h-8 w-auto sm:h-9" />
+            <LogoM size={40} priority className="h-9 w-9 sm:h-10 sm:w-10" />
           </Link>
           <nav className="hidden items-center gap-7 text-[15px] font-medium text-neutral-600 lg:flex">
             {NAV.map((n) => (
@@ -565,7 +494,7 @@ export default async function HomePage() {
             className="desa-naik mt-5 max-w-xl text-base leading-relaxed text-neutral-600 sm:text-lg"
             style={{ '--d': '120ms' } as React.CSSProperties}
           >
-            MADANI adalah aplikasi untuk warga satu kecamatan. Cari kerja harian, pasang lowongan,
+            MADANI adalah aplikasi untuk warga satu kecamatan. Cari kerja, cari pekerja/pasang lowongan,
             buka toko, atau belanja dari tetangga, semuanya di satu tempat.
           </p>
           <div
@@ -616,98 +545,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Nilai jual */}
-      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-5 sm:pb-20">
-        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          {NILAI.map((n) => (
-            <li key={n.judul} className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5">
-              <n.icon className="h-6 w-6 text-secondary-500" />
-              <p className="mt-3 font-display text-base font-bold text-ink-700 sm:text-lg">{n.judul}</p>
-              <p className="mt-1 text-sm leading-snug text-neutral-600">{n.isi}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Animasi desa */}
-      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-5 sm:pb-20">
-        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
-          Dari daftar sampai selesai, semuanya di satu aplikasi
-        </h2>
-        <p className="mt-3 max-w-xl text-neutral-600">
-          Empat langkah sederhana untuk mulai bekerja, berjualan, atau belanja di kecamatanmu.
-        </p>
-        <div className="mt-6 sm:mt-8">
-          <Desa />
-        </div>
-        <ol className="mt-5 grid grid-cols-2 gap-2 text-sm font-semibold text-ink-700 sm:grid-cols-4 sm:gap-3">
-          {['Daftar', 'Pilih peran', 'Cari atau jual', 'Selesai'].map((s, i) => (
-            <li key={s} className="flex items-center gap-2 rounded-full bg-ink-50 px-3 py-2">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-700 text-xs text-white">
-                {i + 1}
-              </span>
-              {s}
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* Layanan */}
-      <section id="layanan" className="mx-auto max-w-6xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-20">
-        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
-          Dua layanan dalam satu aplikasi
-        </h2>
-
-        <div className="mt-24 grid gap-24 md:grid-cols-12 md:gap-4">
-          <div className="relative rounded-[24px] bg-secondary-700 p-6 text-white sm:rounded-[28px] md:col-span-7 md:p-10">
-            <Maskot pose="semangat" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
-            <Briefcase className="h-7 w-7 text-secondary-200" />
-            <h3 className="mt-5 text-2xl font-extrabold leading-tight text-white sm:text-3xl">Kerja harian</h3>
-            <p className="mt-3 max-w-md text-secondary-100">
-              Pasang lowongan atau cari kerja di kecamatanmu sendiri. Cocok untuk tukang, kurir,
-              asisten usaha, dan pekerjaan lain yang dibayar per hari.
-            </p>
-            <ol className="mt-6 flex flex-wrap items-center gap-2 text-sm font-semibold">
-              {['Melamar', 'Diterima', 'Dikerjakan', 'Selesai'].map((s, i, arr) => (
-                <li key={s} className="flex items-center gap-2">
-                  <span className="rounded-full bg-white/15 px-3 py-1.5">{s}</span>
-                  {i < arr.length - 1 && <ChevronRight className="hidden h-4 w-4 text-secondary-200 sm:block" />}
-                </li>
-              ))}
-            </ol>
-            <Link href="/lowongan" className="mt-7 inline-flex rounded-full bg-white px-5 py-2.5 font-semibold text-secondary-700 hover:bg-secondary-50">
-              Lihat lowongan
-            </Link>
-          </div>
-
-          <div className="relative rounded-[24px] bg-primary-500 p-6 text-ink-900 sm:rounded-[28px] md:col-span-5 md:p-10">
-            <Maskot pose="digital" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
-            <ShoppingBag className="h-7 w-7 text-ink-800" />
-            <h3 className="mt-5 text-2xl font-extrabold leading-tight text-ink-900 sm:text-3xl">Belanja sekitar</h3>
-            <p className="mt-3 text-ink-800">
-              Buka toko gratis atau belanja dari penjual satu kecamatan. Barang diantar penjual,
-              tanpa ongkir ekspedisi.
-            </p>
-            <dl className="mt-6 divide-y divide-ink-900/15 rounded-2xl bg-white/45 px-4">
-              {[
-                ['Nasi uduk', 'Rp12.000'],
-                ['Bayam, seikat', 'Rp5.000'],
-                ['Keripik pisang 250 g', 'Rp18.000'],
-              ].map(([nama, harga]) => (
-                <div key={nama} className="flex items-center justify-between gap-3 py-3 text-sm">
-                  <dt className="font-medium">{nama}</dt>
-                  <dd className="shrink-0 font-bold">{harga}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-2 text-xs text-ink-800/70">Contoh produk dan harga.</p>
-            <Link href="/produk" className="mt-5 inline-flex rounded-full bg-ink-800 px-5 py-2.5 font-semibold text-white hover:bg-ink-900">
-              Lihat toko sekitar
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* Katalog publik: bisa dilihat tanpa login */}
       <section id="katalog" className="mx-auto max-w-6xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-20">
         <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
@@ -727,7 +564,7 @@ export default async function HomePage() {
           <div className="mt-4 flex items-center gap-4 rounded-2xl bg-ink-50 p-5">
             <Maskot pose="berpikir" goyang={false} className="h-24 w-auto shrink-0" />
             <p className="text-neutral-600">
-              Belum ada lowongan terbuka saat ini. Coba lihat lagi nanti, atau daftar untuk memasang lowongan pertamamu.
+              Belum ada lowongan terbuka saat ini. Coba lihat lagi nanti, atau daftar untuk mencari pekerja/memasang lowongan pertamamu.
             </p>
           </div>
         ) : (
@@ -815,6 +652,99 @@ export default async function HomePage() {
           <Link href="/register" className="inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
             Mau melamar atau memesan? Daftar gratis
           </Link>
+        </div>
+      </section>
+
+      {/* Ketentuan pendaftaran */}
+      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-5 sm:pb-20">
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {NILAI.map((n) => (
+            <li key={n.judul} className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5">
+              <n.icon className="h-6 w-6 text-secondary-500" />
+              <p className="mt-3 font-display text-base font-bold text-ink-700 sm:text-lg">{n.judul}</p>
+              <p className="mt-1 text-sm leading-snug text-neutral-600">{n.isi}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Animasi desa */}
+      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-5 sm:pb-20">
+        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
+          Dari daftar sampai selesai, semuanya di satu aplikasi
+        </h2>
+        <p className="mt-3 max-w-xl text-neutral-600">
+          Empat langkah sederhana untuk mulai bekerja, berjualan, atau belanja di kecamatanmu.
+        </p>
+        <div className="mt-6 sm:mt-8">
+          <Desa />
+        </div>
+        <ol className="mt-5 grid grid-cols-2 gap-2 text-sm font-semibold text-ink-700 sm:grid-cols-4 sm:gap-3">
+          {['Daftar', 'Pilih peran', 'Cari atau jual', 'Selesai'].map((s, i) => (
+            <li key={s} className="flex items-center gap-2 rounded-full bg-ink-50 px-3 py-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink-700 text-xs text-white">
+                {i + 1}
+              </span>
+              {s}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Layanan */}
+      <section id="layanan" className="mx-auto max-w-6xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-20">
+        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
+          Dua layanan dalam satu aplikasi
+        </h2>
+
+        <div className="mt-24 grid gap-24 md:grid-cols-12 md:gap-4">
+          <div className="relative rounded-[24px] bg-secondary-700 p-6 text-white sm:rounded-[28px] md:col-span-7 md:p-10">
+            <Maskot pose="semangat" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
+            <Briefcase className="h-7 w-7 text-secondary-200" />
+            <h3 className="mt-5 text-2xl font-extrabold leading-tight text-white sm:text-3xl">Pasar Kerja</h3>
+            <p className="mt-3 max-w-md text-secondary-100">
+              Cari lowongan dan pekerja di kecamatanmu sendiri. Mau cari tukang, benerin pipa bocor,
+              jasa kebersihan rumah, dan lain-lain, bisa di MADANI.
+            </p>
+            <ol className="mt-6 flex flex-wrap items-center gap-2 text-sm font-semibold">
+              {['Melamar', 'Diterima', 'Dikerjakan', 'Selesai'].map((s, i, arr) => (
+                <li key={s} className="flex items-center gap-2">
+                  <span className="rounded-full bg-white/15 px-3 py-1.5">{s}</span>
+                  {i < arr.length - 1 && <ChevronRight className="hidden h-4 w-4 text-secondary-200 sm:block" />}
+                </li>
+              ))}
+            </ol>
+            <Link href="/lowongan" className="mt-7 inline-flex rounded-full bg-white px-5 py-2.5 font-semibold text-secondary-700 hover:bg-secondary-50">
+              Lihat lowongan
+            </Link>
+          </div>
+
+          <div className="relative rounded-[24px] bg-primary-500 p-6 text-ink-900 sm:rounded-[28px] md:col-span-5 md:p-10">
+            <Maskot pose="digital" className="absolute -top-16 right-4 h-32 w-auto sm:-top-20 sm:h-40" />
+            <ShoppingBag className="h-7 w-7 text-ink-800" />
+            <h3 className="mt-5 text-2xl font-extrabold leading-tight text-ink-900 sm:text-3xl">Pasar Barang</h3>
+            <p className="mt-3 text-ink-800">
+              Buka toko gratis atau belanja dari penjual satu kecamatan, supaya ekonomi kecamatanmu
+              semakin berkembang. Barang bisa diantar penjual, dan jika kamu beruntung ongkos
+              kirimnya bisa gratis.
+            </p>
+            <dl className="mt-6 divide-y divide-ink-900/15 rounded-2xl bg-white/45 px-4">
+              {[
+                ['Nasi uduk', 'Rp12.000'],
+                ['Bayam, seikat', 'Rp5.000'],
+                ['Keripik pisang 250 g', 'Rp18.000'],
+              ].map(([nama, harga]) => (
+                <div key={nama} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <dt className="font-medium">{nama}</dt>
+                  <dd className="shrink-0 font-bold">{harga}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-2 text-xs text-ink-800/70">Contoh produk dan harga.</p>
+            <Link href="/produk" className="mt-5 inline-flex rounded-full bg-ink-800 px-5 py-2.5 font-semibold text-white hover:bg-ink-900">
+              Lihat toko sekitar
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -906,26 +836,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Fitur */}
-      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-5 sm:pb-24">
-        <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
-          Yang kamu butuhkan, sudah ada
-        </h2>
-        <ul className="mt-8 grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-          {FITUR.map((f) => (
-            <li key={f.judul} className="flex gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sun-400/30 text-ink-800">
-                <f.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-display text-lg font-bold text-ink-700">{f.judul}</p>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-600">{f.isi}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {/* Pembagian */}
       <section id="bagi-hasil" className="mx-auto max-w-6xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-24">
         <h2 className="max-w-2xl text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">
@@ -936,30 +846,30 @@ export default async function HomePage() {
         </p>
 
         <div className="mt-8 flex h-12 overflow-hidden rounded-full border-2 border-ink-700 sm:mt-10 sm:h-14">
-          <div className="bg-ink-700" style={{ width: '10%' }} />
-          <div className="bg-primary-500" style={{ width: '80%' }} />
-          <div className="bg-secondary-500" style={{ width: '10%' }} />
+          <div className="bg-ink-700" style={{ width: '7%' }} />
+          <div className="bg-primary-500" style={{ width: '90%' }} />
+          <div className="bg-secondary-500" style={{ width: '3%' }} />
         </div>
 
         <dl className="mt-6 grid gap-5 md:grid-cols-3">
           <div className="flex gap-3">
             <span className="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-ink-700" />
             <div>
-              <dt className="font-display text-xl font-bold text-ink-700">10% Layanan platform</dt>
+              <dt className="font-display text-xl font-bold text-ink-700">7% Layanan platform</dt>
               <dd className="text-neutral-600">Untuk menjalankan dan mengembangkan MADANI.</dd>
             </div>
           </div>
           <div className="flex gap-3">
             <span className="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-primary-500" />
             <div>
-              <dt className="font-display text-xl font-bold text-ink-700">80% Pekerja atau penjual</dt>
+              <dt className="font-display text-xl font-bold text-ink-700">90% Pekerja atau penjual</dt>
               <dd className="text-neutral-600">Yang mengerjakan atau menjual barangnya mendapat bagian terbesar.</dd>
             </div>
           </div>
           <div className="flex gap-3">
             <span className="mt-1.5 h-3 w-3 shrink-0 rounded-full bg-secondary-500" />
             <div>
-              <dt className="font-display text-xl font-bold text-ink-700">10% Kas kecamatan</dt>
+              <dt className="font-display text-xl font-bold text-ink-700">3% Kas kecamatan</dt>
               <dd className="text-neutral-600">Kembali ke wilayah tempat transaksi terjadi.</dd>
             </div>
           </div>
@@ -994,93 +904,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section id="faq" className="mx-auto max-w-3xl scroll-mt-28 px-4 pb-14 sm:px-5 sm:pb-24">
-        <div className="flex items-end justify-between gap-4">
-          <h2 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl md:text-4xl">Pertanyaan yang sering muncul</h2>
-          <Maskot pose="tunjuk" className="h-32 w-auto shrink-0 sm:h-40" />
-        </div>
-        <div className="mt-8 divide-y divide-neutral-200 border-y border-neutral-200">
-          {FAQ.map((f) => (
-            <details key={f.q} className="group py-1">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left font-display text-base font-bold text-ink-700 sm:text-lg [&::-webkit-details-marker]:hidden">
-                <span>{f.q}</span>
-                <ChevronDown className="h-5 w-5 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
-              </summary>
-              <p className="pb-4 pr-6 leading-relaxed text-neutral-600">{f.a}</p>
-            </details>
-          ))}
-          <details className="group py-1">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left font-display text-base font-bold text-ink-700 sm:text-lg [&::-webkit-details-marker]:hidden">
-              <span>Bagaimana cara menghapus akun?</span>
-              <ChevronDown className="h-5 w-5 shrink-0 text-neutral-400 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="pb-4 pr-6 leading-relaxed text-neutral-600">
-              Buka menu Akun di aplikasi lalu pilih Hapus akun saya, atau kunjungi halaman{' '}
-              <Link href="/hapus-akun" className="font-semibold text-secondary-700 underline">Hapus Akun</Link>.
-              Penjelasan lengkap ada di{' '}
-              <Link href="/privasi" className="font-semibold text-secondary-700 underline">Kebijakan Privasi</Link>.
-            </p>
-          </details>
-        </div>
-      </section>
-
-      {/* Keamanan */}
-      <section id="aman" className="scroll-mt-20 rounded-t-[32px] bg-ink-700 text-white sm:rounded-t-[40px]">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-5 sm:py-20 lg:grid-cols-2 lg:gap-14">
-          <div>
-            <Lock className="h-8 w-8 text-primary-300" />
-            <h2 className="mt-4 text-2xl font-extrabold leading-[1.15] text-white sm:text-4xl md:text-5xl">
-              Dibuat supaya nyaman dan jelas.
-            </h2>
-            <p className="mt-4 max-w-md text-white/70">
-              Setiap pesanan dan pekerjaan punya status yang bisa dilihat kedua pihak.
-            </p>
-            <ol className="mt-8 space-y-5 sm:mt-10">
-              {[
-                ['Dibuat', 'Pembeli memesan, atau pemberi kerja memilih pelamar.'],
-                ['Diproses', 'Penjual atau pekerja menjalankan sesuai kesepakatan lewat chat.'],
-                ['Dikonfirmasi', 'Barang diterima atau pekerjaan ditandai selesai, lalu saling memberi penilaian.'],
-              ].map(([judul, isi]) => (
-                <li key={judul} className="flex gap-4">
-                  <span className="mt-2 h-3 w-3 shrink-0 rounded-full bg-primary-400" />
-                  <div>
-                    <p className="font-display text-xl font-bold text-white">{judul}</p>
-                    <p className="text-white/70">{isi}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <Maskot pose="percaya" className="mt-8 h-56 w-auto" />
-          </div>
-
-          <ul className="divide-y divide-white/15 self-center border-y border-white/15">
-            {AMAN.map((k) => (
-              <li key={k.judul} className="flex gap-4 py-5 sm:py-6">
-                <k.icon className="mt-1 h-6 w-6 shrink-0 text-primary-300" />
-                <div>
-                  <p className="font-display text-lg font-bold text-white">{k.judul}</p>
-                  <p className="mt-1 text-white/70">{k.isi}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-            {/* Footer */}
+      {/* Footer */}
       <footer className="bg-ink-800 py-10 text-sm text-white/70">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-5 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <p className="font-display text-lg font-bold text-white">MADANI</p>
             <p className="mt-2 max-w-xs">
-              Marketplace tenaga kerja harian dan barang berbasis kecamatan.
+              Marketplace kecamatan untuk pekerjaan dan barang. Dikembangkan oleh Sharee Management Group.
             </p>
             <p className="mt-3">
               Email:{' '}
               <a href="mailto:info@rhgteknologiindonesia.id" className="underline hover:text-white">
                 info@rhgteknologiindonesia.id
               </a>
+            </p>
+            <p className="mt-3 max-w-xs">
+              Alamat: Jl. Kasnariansyah No 1500 Palembang Sumatera Selatan 30128
             </p>
           </div>
           <div>
@@ -1095,6 +934,7 @@ export default async function HomePage() {
           <div>
             <p className="font-semibold text-white">Informasi</p>
             <ul className="mt-3 space-y-2">
+              <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
               <li><Link href="/syarat" className="hover:text-white">Syarat dan Ketentuan</Link></li>
               <li><Link href="/refund" className="hover:text-white">Kebijakan Refund</Link></li>
               <li><Link href="/privasi" className="hover:text-white">Kebijakan Privasi</Link></li>

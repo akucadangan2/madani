@@ -15,7 +15,7 @@ export default function LegalLayout({
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-3xl items-center px-5 py-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-slate-900">
-            <Image src="/madani.png" alt="MADANI" width={28} height={28} />
+            <Image src="/logo.png" alt="MADANI" width={28} height={28} />
             MADANI
           </Link>
         </div>
