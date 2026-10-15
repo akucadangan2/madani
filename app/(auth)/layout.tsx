@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { LogoM } from '@/components/logo-m';
 import { usePathname } from 'next/navigation';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -19,7 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="sticky top-0 flex h-screen flex-col justify-between p-12">
           <Link href="/" className="self-start rounded-xl bg-white px-3 py-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/madani.png" alt="MADANI" className="h-9 w-auto" />
+            <LogoM size={40} className="h-9 w-9" />
           </Link>
           <div className="relative max-w-md">
             <h2 className="text-5xl font-extrabold leading-[1.05] text-white">
@@ -36,7 +37,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="relative flex min-h-screen flex-col">
         <Link href="/" className="absolute left-5 top-5 z-10 lg:hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/madani.png" alt="MADANI" className="h-8 w-auto" />
+          <LogoM size={36} className="h-8 w-8" />
         </Link>
         {children}
       </main>

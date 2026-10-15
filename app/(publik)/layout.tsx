@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LogoM } from '@/components/logo-m';
 import { getCurrentUser } from '@/lib/auth/current-user';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ export default async function PublikLayout({ children }: { children: React.React
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-5">
           <Link href="/" className="shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/madani.png" alt="MADANI" className="h-8 w-auto sm:h-9" />
+            <LogoM size={40} className="h-8 w-8 sm:h-9 sm:w-9" />
           </Link>
           <div className="flex items-center gap-1">
             {user ? (
