@@ -106,7 +106,11 @@ export async function POST(request: NextRequest) {
 
     // Password tetap per user (turunan ID user + rahasia server). Tidak diganti tiap login,
     // karena mengganti password mencabut semua sesi lain milik user itu.
-    const rahasia = process.env.AUTH_PASS_SECRET || process.env.SUPABASE_SECRET_KEY!;
+    const rahasia = process.env.AUTH_PASS_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+    if (!rahasia) {
+      console.error('[verify-otp] AUTH_PASS_SECRET belum diatur');
+      return NextResponse.json({ error: 'Konfigurasi server belum lengkap' }, { status: 500 });
+    }
     const kataSandi = createHmac('sha256', rahasia).update(`madani-login:${userId}`).digest('hex');
 
     // Sign-in memakai client anon TERPISAH, supaya client admin tidak berubah jadi sesi user.
