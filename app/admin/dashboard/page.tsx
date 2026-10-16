@@ -46,6 +46,7 @@ export default async function AdminDashboard() {
   const tindakan = [
     { n: tokoMenunggu, teks: 'toko menunggu verifikasi', href: '/admin/toko' },
     { n: ktpMenunggu, teks: 'pengajuan KTP menunggu', href: '/admin/verifikasi-ktp' },
+    { n: penarikanMenunggu, teks: 'permintaan pencairan dana', href: '/admin/pencairan-dana' },
   ].filter((x) => x.n > 0);
 
   return (

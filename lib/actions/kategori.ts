@@ -7,7 +7,7 @@ export async function createKategori(formData: FormData) {
   const tipe = formData.get('tipe') as string;
 
   const supabase = await createClient();
-  const { error } = await supabase.from('kategori').insert({ nama, tipe });
+  const { error } = await supabase.from('kategori').insert({ nama, tipe, urutan: 50 });
   if (error) return { error: error.message };
 
   revalidatePath('/admin/kategori');

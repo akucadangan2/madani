@@ -9,7 +9,7 @@ export default async function PostingKerjaPage() {
 
   const supabase = await createClient();
   const [{ data: kategoriList }, { data: kecamatanList }] = await Promise.all([
-    supabase.from('kategori').select('id, nama').order('nama'),
+    supabase.from('kategori').select('id, nama').eq('tipe', 'kerja').order('urutan'),
     supabase.from('kecamatan').select('id, nama').order('nama'),
   ]);
 

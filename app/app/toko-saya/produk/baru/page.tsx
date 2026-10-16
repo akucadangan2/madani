@@ -24,7 +24,7 @@ export default async function ProdukBaruPage() {
     .from('kategori')
     .select('id, nama')
     .eq('tipe', 'produk')
-    .order('nama');
+    .order('urutan');
 
   return (
     <div className="mx-auto max-w-xl px-4 pb-8 pt-6">

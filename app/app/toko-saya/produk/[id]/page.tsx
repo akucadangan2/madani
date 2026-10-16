@@ -30,7 +30,7 @@ export default async function EditProdukPage({ params }: { params: Promise<{ id:
     .from('kategori')
     .select('id, nama')
     .eq('tipe', 'produk')
-    .order('nama');
+    .order('urutan');
 
   return (
     <div className="mx-auto max-w-xl px-4 pb-8 pt-6">

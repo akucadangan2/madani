@@ -21,7 +21,7 @@ export async function tambahKategori(formData: FormData) {
   if (!nama || !tipe) return;
 
   const supabase = await createClient();
-  await supabase.from('kategori').insert({ nama, tipe });
+  await supabase.from('kategori').insert({ nama, tipe, urutan: 50 });
   revalidatePath('/kategori');
 }
 

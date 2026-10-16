@@ -3,7 +3,7 @@ import { createKategori, deleteKategori } from '@/lib/actions/kategori';
 
 export default async function KategoriPage() {
   const supabase = await createClient();
-  const { data: kategoriList } = await supabase.from('kategori').select('*').order('tipe').order('nama');
+  const { data: kategoriList } = await supabase.from('kategori').select('*').order('tipe').order('urutan').order('nama');
 
   const kerja = kategoriList?.filter((k) => k.tipe === 'kerja') ?? [];
   const produk = kategoriList?.filter((k) => k.tipe === 'produk') ?? [];

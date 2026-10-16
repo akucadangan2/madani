@@ -36,7 +36,7 @@ export default async function MarketplacePage({
   if (cari) query = query.ilike('nama', `%${cari}%`);
 
   const [{ data: kategoriList }, { data: produkData, error }, { count: jumlahKeranjang }] = await Promise.all([
-    supabase.from('kategori').select('id, nama').eq('tipe', 'produk').order('nama'),
+    supabase.from('kategori').select('id, nama').eq('tipe', 'produk').order('urutan'),
     query,
     supabase.from('keranjang_item').select('*', { count: 'exact', head: true }).eq('pembeli_id', user.id),
   ]);
