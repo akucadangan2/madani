@@ -43,6 +43,23 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const baris = (Array.isArray(data) ? data[0] : data) as Baris | undefined;
+  // Data pembeli untuk tagihan DOKU (agar tampil nama pembeli, bukan nama merchant).
+  const meta = (u.user.user_metadata ?? {}) as Record<string, unknown>;
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', u.user.id).maybeSingle();
+  const prow = (prof ?? {}) as Record<string, unknown>;
+  const pilih = (...kunci: string[]) => {
+    for (const k of kunci) {
+      const v = prow[k] ?? meta[k];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+    }
+    return undefined;
+  };
+  const hp = pilih('phone') ?? u.user.phone ?? '';
+  const pelanggan = {
+    nama: pilih('full_name', 'nama_lengkap', 'nama', 'name'),
+    email: u.user.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.user.email) ? u.user.email : undefined,
+    telepon: hp ? (hp.startsWith('+') ? hp : /^62/.test(hp) ? '+' + hp : hp) : undefined,
+  };
   if (!baris?.ref) return NextResponse.json({ error: 'Gagal menyiapkan pembayaran' }, { status: 500 });
 
   try {
@@ -50,6 +67,7 @@ export async function POST(req: Request) {
       invoice: baris.ref,
       jumlah: Number(baris.jumlah),
       callbackUrl: `${SITE}/bayar/selesai?ref=${encodeURIComponent(baris.ref)}`,
+      pelanggan,
     });
     return NextResponse.json({ url, ref: baris.ref });
   } catch (e) {

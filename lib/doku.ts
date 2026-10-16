@@ -26,6 +26,7 @@ export async function buatCheckout(p: {
   jumlah: number;
   callbackUrl: string;
   menit?: number;
+  pelanggan?: { nama?: string; email?: string; telepon?: string };
 }): Promise<{ url: string; expired?: string }> {
   const clientId = process.env.DOKU_CLIENT_ID;
   const secret = process.env.DOKU_SECRET_KEY;
@@ -33,6 +34,11 @@ export async function buatCheckout(p: {
 
   const base = (process.env.DOKU_BASE_URL ?? 'https://api-sandbox.doku.com').replace(/\/$/, '');
   const target = '/checkout/v1/payment';
+  const pl = p.pelanggan ?? {};
+  const customer: Record<string, string> = {};
+  if (pl.nama) customer.name = pl.nama.slice(0, 100);
+  if (pl.email) customer.email = pl.email;
+  if (pl.telepon) customer.phone = pl.telepon;
   const body = JSON.stringify({
     order: {
       amount: Math.round(p.jumlah),
@@ -40,6 +46,7 @@ export async function buatCheckout(p: {
       callback_url: p.callbackUrl,
     },
     payment: { payment_due_date: p.menit ?? 60 },
+    ...(Object.keys(customer).length ? { customer } : {}),
   });
 
   const requestId = randomUUID();
