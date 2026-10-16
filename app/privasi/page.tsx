@@ -76,6 +76,12 @@ export default function Page() {
         dianonimkan. Catatan transaksi, laporan, dan data lain yang wajib kami simpan menurut peraturan
         perundang-undangan disimpan tanpa identitas yang dapat mengenali kamu, selama diwajibkan.
       </p>
+        <p>
+          Foto KTP dan foto selfie dihapus dari penyimpanan secara otomatis setelah verifikasi identitas
+          kamu disetujui. Setelah itu kami hanya menyimpan nomor KTP dan status verifikasi sebagai
+          catatan bahwa verifikasi sudah dilakukan. Jika verifikasi ditolak, foto yang kamu kirim tetap
+          disimpan sementara agar kamu dapat mengirim ulang.
+        </p>
 
       <h2>8. Hak kamu</h2>
       <p>
