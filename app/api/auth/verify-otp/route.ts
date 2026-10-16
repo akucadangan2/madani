@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { createHmac } from 'crypto';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -103,14 +104,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Password acak sekali pakai: tidak pernah disimpan/ditampilkan, hanya untuk mendapat session.
-    const tempPassword = crypto.randomUUID();
-    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-      password: tempPassword,
-    });
-    if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
-    }
+    // Password tetap per user (turunan ID user + rahasia server). Tidak diganti tiap login,
+    // karena mengganti password mencabut semua sesi lain milik user itu.
+    const rahasia = process.env.AUTH_PASS_SECRET || process.env.SUPABASE_SECRET_KEY!;
+    const kataSandi = createHmac('sha256', rahasia).update(`madani-login:${userId}`).digest('hex');
 
     // Sign-in memakai client anon TERPISAH, supaya client admin tidak berubah jadi sesi user.
     const anon = createSupabaseClient(
@@ -118,10 +115,19 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       { auth: { persistSession: false, autoRefreshToken: false } }
     );
-    const { data: signInData, error: signInError } = await anon.auth.signInWithPassword({
-      phone,
-      password: tempPassword,
-    });
+    let masuk = await anon.auth.signInWithPassword({ phone, password: kataSandi });
+    if (masuk.error || !masuk.data.session) {
+      // Login pertama setelah perubahan ini (atau user baru): pasang password tetap sekali saja.
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        password: kataSandi,
+      });
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+      masuk = await anon.auth.signInWithPassword({ phone, password: kataSandi });
+    }
+    const signInData = masuk.data;
+    const signInError = masuk.error;
     if (signInError || !signInData.session) {
       return NextResponse.json(
         { error: signInError?.message ?? 'Gagal membuat sesi login' },
