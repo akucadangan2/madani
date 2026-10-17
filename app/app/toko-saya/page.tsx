@@ -29,7 +29,7 @@ export default async function TokoSayaPage() {
 
   // Belum punya toko: onboarding
   if (!toko) {
-    const { data: kecamatanList } = await supabase.from('kecamatan').select('id, nama').order('nama');
+    
 
     return (
       <div className="mx-auto max-w-md px-4 pt-10">
@@ -41,7 +41,7 @@ export default async function TokoSayaPage() {
           <p className="mt-1.5 text-center text-sm text-neutral-500">
             Satu langkah lagi sebelum kamu bisa mulai jualan ke warga sekitar.
           </p>
-          <BuatTokoForm kecamatanList={kecamatanList ?? []} />
+          <BuatTokoForm />
         </div>
       </div>
     );

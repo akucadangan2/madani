@@ -8,6 +8,7 @@ import {
   ChevronDown, Wallet, FileText, Tag,
 } from 'lucide-react';
 import { postingKerja } from '@/lib/actions/kerja';
+import { PilihKecamatan } from '@/components/pilih-kecamatan';
 
 type Opsi = { id: string | number; nama: string };
 
@@ -25,10 +26,8 @@ function formatRibuan(digitsOnly: string) {
 
 export function PostingForm({
   kategoriList,
-  kecamatanList,
 }: {
   kategoriList: Opsi[];
-  kecamatanList: Opsi[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -37,11 +36,12 @@ export function PostingForm({
   const [deskripsi, setDeskripsi] = useState('');
   const [kategoriId, setKategoriId] = useState('');
   const [kecamatanId, setKecamatanId] = useState('');
+  const [kecamatanNama, setKecamatanNama] = useState('');
   const [upahDigits, setUpahDigits] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const kategoriTerpilih = kategoriList.find((k) => String(k.id) === kategoriId);
-  const kecamatanTerpilih = kecamatanList.find((k) => String(k.id) === kecamatanId);
+  
 
   const isValid =
     judul.trim().length >= 5 &&
@@ -137,20 +137,14 @@ export function PostingForm({
                 <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-neutral-700">
                   <MapPin className="h-3.5 w-3.5" /> Kecamatan
                 </label>
-                <div className="relative">
-                  <select
-                    value={kecamatanId}
-                    onChange={(e) => setKecamatanId(e.target.value)}
-                    required
-                    className="w-full appearance-none rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 pl-3 pr-9 text-sm text-neutral-900 focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
-                  >
-                    <option value="" disabled>Pilih kecamatan</option>
-                    {kecamatanList.map((k) => (
-                      <option key={k.id} value={k.id}>{k.nama}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                </div>
+                <PilihKecamatan
+                  value={kecamatanId}
+                  nama={kecamatanNama}
+                  onChange={(id, nama) => {
+                    setKecamatanId(id);
+                    setKecamatanNama(nama);
+                  }}
+                />
               </div>
             </div>
 
@@ -256,7 +250,7 @@ export function PostingForm({
                   </h3>
                   <p className="mt-1.5 flex items-center gap-1 text-sm text-neutral-500">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
-                    {kecamatanTerpilih?.nama ?? 'Kecamatan'}
+                    {kecamatanNama || 'Kecamatan'}
                   </p>
                   <p className="mt-2.5 line-clamp-2 text-sm text-neutral-500">
                     {deskripsi || 'Deskripsi pekerjaan akan muncul di sini...'}

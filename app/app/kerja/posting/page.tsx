@@ -8,15 +8,11 @@ export default async function PostingKerjaPage() {
   if (!user) redirect('/login');
 
   const supabase = await createClient();
-  const [{ data: kategoriList }, { data: kecamatanList }] = await Promise.all([
-    supabase.from('kategori').select('id, nama').eq('tipe', 'kerja').order('urutan'),
-    supabase.from('kecamatan').select('id, nama').order('nama'),
-  ]);
+  const { data: kategoriList } = await supabase
+    .from('kategori')
+    .select('id, nama')
+    .eq('tipe', 'kerja')
+    .order('urutan');
 
-  return (
-    <PostingForm
-      kategoriList={kategoriList ?? []}
-      kecamatanList={kecamatanList ?? []}
-    />
-  );
+  return <PostingForm kategoriList={kategoriList ?? []} />;
 }
