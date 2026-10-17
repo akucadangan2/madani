@@ -184,7 +184,7 @@ export default async function AdminVerifikasiKtp({
                   <div className="mt-3 flex flex-wrap gap-3">
                     {[
                       { label: 'Foto KTP', url: urlKtp },
-                      { label: 'Selfie + KTP', url: urlSelfie },
+                      { label: 'Selfie', url: urlSelfie },
                     ].map((f) => (
                       <div key={f.label}>
                         <div className="mb-1 text-xs font-medium text-neutral-500">{f.label}</div>

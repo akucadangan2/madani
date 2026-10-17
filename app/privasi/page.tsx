@@ -77,10 +77,7 @@ export default function Page() {
         perundang-undangan disimpan tanpa identitas yang dapat mengenali kamu, selama diwajibkan.
       </p>
         <p>
-          Foto KTP dan foto selfie dihapus dari penyimpanan secara otomatis setelah verifikasi identitas
-          kamu disetujui. Setelah itu kami hanya menyimpan nomor KTP dan status verifikasi sebagai
-          catatan bahwa verifikasi sudah dilakukan. Jika verifikasi ditolak, foto yang kamu kirim tetap
-          disimpan sementara agar kamu dapat mengirim ulang.
+          Foto KTP dihapus dari penyimpanan secara otomatis setelah verifikasi identitas kamu disetujui. Nomor KTP dan status verifikasi tetap kami simpan sebagai catatan bahwa verifikasi sudah dilakukan. Foto selfie tetap disimpan dan dipakai sebagai foto profil kamu, yang dapat dilihat pengguna lain. Jika verifikasi ditolak, foto yang kamu kirim tetap disimpan sementara agar kamu dapat mengirim ulang.
         </p>
 
       <h2>8. Hak kamu</h2>

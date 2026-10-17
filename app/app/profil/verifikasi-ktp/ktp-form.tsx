@@ -81,7 +81,7 @@ export default function KtpForm() {
 
     if (!/^\d{16}$/.test(nik)) return setError('NIK harus 16 digit angka');
     if (!ktp) return setError('Foto KTP wajib diisi');
-    if (!selfie) return setError('Foto selfie sambil memegang KTP wajib diisi');
+    if (!selfie) return setError('Foto selfie wajib diisi');
     const salah = cekFile(ktp, 'Foto KTP') ?? cekFile(selfie, 'Foto selfie');
     if (salah) return setError(salah);
 
@@ -157,7 +157,7 @@ export default function KtpForm() {
 
       <FotoInput label="Foto KTP" hint="Seluruh KTP terlihat jelas, tidak buram" file={ktp} onChange={setKtp} />
       <FotoInput
-        label="Selfie sambil memegang KTP"
+        label="Selfie (wajah terlihat jelas, tanpa memegang KTP)"
         hint="Wajah dan KTP terlihat jelas dalam satu foto"
         file={selfie}
         onChange={setSelfie}
