@@ -86,6 +86,7 @@ export async function POST(req: Request) {
   }
 
   // 4. Tutup akun login (soft delete: id tetap ada agar riwayat tidak putus)
+  await admin.storage.from('avatar').remove([`${u.id}/profil.jpg`]).catch(() => null)
   const { error: errDel } = await admin.auth.admin.deleteUser(u.id, true)
   if (errDel) {
     return gagal(

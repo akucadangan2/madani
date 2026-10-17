@@ -64,8 +64,7 @@ export default function Page() {
 
       <h2>6. Keamanan</h2>
       <p>
-        Foto KTP dan selfie disimpan pada penyimpanan privat dengan akses terbatas dan hanya dilihat admin
-        untuk verifikasi. Akses data diatur dengan kontrol per pengguna. Meski begitu, tidak ada sistem yang
+        Foto KTP disimpan pada penyimpanan privat dengan akses terbatas dan hanya dilihat admin untuk verifikasi. Foto selfie disalin menjadi foto profil yang dapat dilihat pengguna lain. Akses data diatur dengan kontrol per pengguna. Meski begitu, tidak ada sistem yang
         sepenuhnya bebas risiko; jaga kerahasiaan perangkat dan kode OTP kamu.
       </p>
 
