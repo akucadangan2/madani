@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   Store,
   Tags,
+  UserCog,
   Users,
   X,
   type LucideIcon,
@@ -51,6 +52,7 @@ const NAV: { judul: string; items: Item[] }[] = [
     judul: 'Data Master',
     items: [
       { href: '/admin/users', label: 'Pengguna', icon: Users },
+      { href: '/admin/admin-akun', label: 'Akun Admin', icon: UserCog },
       { href: '/admin/wilayah', label: 'Wilayah', icon: MapPin },
       { href: '/admin/kategori', label: 'Kategori', icon: Tags },
       { href: '/admin/bagi-hasil', label: 'Bagi Hasil', icon: Percent },
