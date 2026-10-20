@@ -29,6 +29,7 @@ export async function POST(req: Request) {
 
   const ref = j.order?.invoice_number;
   const status = String(j.transaction?.status ?? '').toUpperCase();
+  console.log('[doku] notifikasi diterima', ref, status);
 
   if (!ref) {
     console.error('[doku] notifikasi tanpa invoice_number', body.slice(0, 500));
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
   const n = Number(j.order?.amount);
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
+    (process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
@@ -55,5 +56,6 @@ export async function POST(req: Request) {
   if (data !== 'ok' && data !== 'sudah') {
     console.error('[doku] PERLU DICEK MANUAL', ref, data); // uang masuk tapi pesanan tidak bisa ditandai
   }
+  console.log('[doku] rpc_doku_lunas', ref, data);
   return NextResponse.json({ ok: true, hasil: data });
 }
