@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { tokoAktif } from '@/lib/toko-aktif';
 import { buatProduk } from '@/lib/actions/produk';
 import ProdukForm from '../produk-form';
 
@@ -13,11 +14,7 @@ export default async function ProdukBaruPage() {
   if (!user) redirect('/login');
 
   const supabase = await createClient();
-  const { data: toko } = await supabase
-    .from('toko')
-    .select('id, status_verifikasi')
-    .eq('penjual_id', user.id)
-    .maybeSingle();
+  const { data: toko } = await tokoAktif(supabase, user.id, 'status_verifikasi');
   if (!toko) redirect('/toko-saya');
 
   const { data: kategori } = await supabase

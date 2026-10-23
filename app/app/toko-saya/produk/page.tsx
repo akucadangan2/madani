@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { ChevronLeft, Package, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { tokoAktif } from '@/lib/toko-aktif';
+import HargaProduk from '@/components/harga-produk';
 import { hapusProduk, ubahStatusProduk } from '@/lib/actions/produk';
 import HapusButton from './hapus-button';
 
@@ -29,16 +31,12 @@ export default async function ProdukSayaPage({
   if (!user) redirect('/login');
 
   const supabase = await createClient();
-  const { data: toko } = await supabase
-    .from('toko')
-    .select('id, status_verifikasi')
-    .eq('penjual_id', user.id)
-    .maybeSingle();
+  const { data: toko } = await tokoAktif(supabase, user.id, 'status_verifikasi');
   if (!toko) redirect('/toko-saya');
 
   const { data } = await supabase
     .from('produk')
-    .select('id, nama, harga, satuan, stok, status, foto_url')
+    .select('id, nama, harga, harga_diskon, diskon_sampai, satuan, stok, status, foto_url')
     .eq('toko_id', toko.id)
     .order('created_at', { ascending: false });
   const produkList = (data ?? []) as Produk[];
@@ -104,7 +102,7 @@ export default async function ProdukSayaPage({
                     {p.nama}
                   </Link>
                   <p className="mt-0.5 text-sm font-semibold text-primary-700">
-                    Rp {Number(p.harga).toLocaleString('id-ID')}{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}
+                    <HargaProduk p={p} fmt={(n) => 'Rp ' + n.toLocaleString('id-ID')} />{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}
                   </p>
                   <p className="text-xs text-neutral-500">
                     Stok {p.stok ?? 0} -{' '}

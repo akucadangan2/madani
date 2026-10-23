@@ -4,6 +4,10 @@ import { Store, Package, ShoppingBag, Plus, ArrowRight, Clock, XCircle } from 'l
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import BuatTokoForm from './buat-toko-form';
+import HapusTokoButton from './hapus-toko-button';
+import { tokoAktif, semuaToko } from '@/lib/toko-aktif';
+import { pilihTokoAktif, hapusTokoSaya } from '@/lib/actions/toko-multi';
+import HargaProduk from '@/components/harga-produk';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,16 +20,18 @@ type Produk = {
   foto_url: string[] | null;
 };
 
-export default async function TokoSayaPage() {
+export default async function TokoSayaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { ok, error: errMsg } = await searchParams;
   const user = await getCurrentUser();
   if (!user) redirect('/login');
 
   const supabase = await createClient();
-  const { data: toko } = await supabase
-    .from('toko')
-    .select('id, nama_toko, status_verifikasi')
-    .eq('penjual_id', user.id)
-    .maybeSingle();
+  const { data: toko } = await tokoAktif(supabase, user.id, 'nama_toko, status_verifikasi');
+  const semua = toko ? await semuaToko(supabase, user.id) : [];
 
   // Belum punya toko: onboarding
   if (!toko) {
@@ -52,7 +58,7 @@ export default async function TokoSayaPage() {
   const [{ data: pData }, { count: produkCount }, { count: perluDiproses }] = await Promise.all([
     supabase
       .from('produk')
-      .select('id, nama, harga, stok, status, foto_url')
+      .select('id, nama, harga, harga_diskon, diskon_sampai, stok, status, foto_url')
       .eq('toko_id', toko.id)
       .order('created_at', { ascending: false })
       .limit(8),
@@ -86,6 +92,34 @@ export default async function TokoSayaPage() {
           </span>
         </div>
       </div>
+
+      {ok && (
+        <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">{ok}</div>
+      )}
+      {errMsg && (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">{errMsg}</div>
+      )}
+
+      {semua.length > 1 && (
+        <div className="mt-4 rounded-2xl border border-neutral-200 bg-white p-3">
+          <p className="mb-2 text-xs font-medium text-neutral-500">Ganti toko ({semua.length} toko)</p>
+          <div className="flex flex-wrap gap-2">
+            {semua.map((t) => (
+              <form key={t.id} action={pilihTokoAktif.bind(null, t.id)}>
+                <button
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
+                    t.id === toko.id
+                      ? 'border-primary-500 bg-primary-50 text-primary-700'
+                      : 'border-neutral-200 text-neutral-700 hover:bg-neutral-50'
+                  }`}
+                >
+                  {t.nama_toko}
+                </button>
+              </form>
+            ))}
+          </div>
+        </div>
+      )}
 
       {toko.status_verifikasi === 'menunggu' && (
         <div className="mt-4 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
@@ -163,7 +197,7 @@ export default async function TokoSayaPage() {
                 </div>
                 <h3 className="mt-2 line-clamp-2 text-sm font-medium text-neutral-900">{p.nama}</h3>
                 <p className="mt-1 text-sm font-semibold text-primary-700">
-                  Rp {Number(p.harga).toLocaleString('id-ID')}
+                  <HargaProduk p={p} fmt={(n) => 'Rp ' + n.toLocaleString('id-ID')} />
                 </p>
                 <p className="text-xs text-neutral-400">Stok: {p.stok ?? 0}</p>
               </Link>
@@ -189,6 +223,18 @@ export default async function TokoSayaPage() {
           )}
         </div>
       )}
+
+      <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-neutral-200 pt-5">
+        <Link
+          href="/toko-saya/baru"
+          className="inline-flex items-center gap-1 rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"
+        >
+          <Plus className="h-4 w-4" /> Tambah toko
+        </Link>
+        <form action={hapusTokoSaya.bind(null, toko.id)} className="ml-auto">
+          <HapusTokoButton nama={toko.nama_toko} />
+        </form>
+      </div>
     </div>
   );
 }

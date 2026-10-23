@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Package, Receipt, Search, ShoppingCart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { rupiah } from '@/lib/admin/data';
+import HargaProduk from '@/components/harga-produk';
 
 type Produk = {
   id: string;
@@ -29,7 +30,7 @@ export default async function MarketplacePage({
 
   let query = supabase
     .from('produk')
-    .select('id, nama, harga, satuan, stok, foto_url, toko_id')
+    .select('id, nama, harga, harga_diskon, diskon_sampai, satuan, stok, foto_url, toko_id')
     .eq('status', 'aktif')
     .order('created_at', { ascending: false })
     .limit(60);
@@ -135,7 +136,7 @@ export default async function MarketplacePage({
               </div>
               <div className="p-3">
                 <h3 className="line-clamp-2 text-sm font-medium text-neutral-900">{p.nama}</h3>
-                <p className="mt-1 text-sm font-bold text-secondary-700">{rupiah(p.harga)}{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}</p>
+                <p className="mt-1 text-sm font-bold text-secondary-700"><HargaProduk p={p} fmt={rupiah} />{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}</p>
                 <p className="mt-0.5 truncate text-xs text-neutral-500">{namaToko.get(p.toko_id) ?? ''}</p>
               </div>
             </Link>

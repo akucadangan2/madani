@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { tambahSkill, hapusSkill } from '@/lib/actions/profil';
@@ -21,6 +22,14 @@ export default async function ProfilSkillPage() {
   return (
     <div className="p-6 max-w-lg space-y-6">
       <h1 className="text-xl font-semibold text-neutral-900">Profil & Skill</h1>
+
+      <Link
+        href="/profil/tarif-dokumen"
+        className="block rounded-lg border border-neutral-200 p-4 text-sm hover:bg-neutral-50"
+      >
+        <span className="font-medium text-neutral-900">Tarif & dokumen</span>
+        <span className="mt-0.5 block text-neutral-500">Atur tarif kerja, unggah sertifikat, bukti keahlian, atau SIM</span>
+      </Link>
 
       <div className="rounded-lg border border-neutral-200 p-4">
         <h2 className="font-medium text-neutral-900 mb-1">Rating</h2>

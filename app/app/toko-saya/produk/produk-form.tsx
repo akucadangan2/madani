@@ -22,6 +22,8 @@ type Props = {
     deskripsi: string;
     kategori_id: string;
     harga: number;
+    harga_diskon: number | null;
+    diskon_sampai: string | null;
     stok: number;
     status: string;
     foto: string[];
@@ -293,6 +295,35 @@ export default function ProdukForm({ userId, kategori, action, tombol, awal }: P
           ))}
         </datalist>
         <p className="mt-1.5 text-xs text-neutral-500">Tampil di samping harga, misalnya Rp15.000 / kg.</p>
+      </div>
+
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+        <p className="mb-2 text-sm font-medium text-neutral-800">Diskon (opsional)</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-neutral-600">Harga diskon (Rp)</label>
+            <input
+              type="number"
+              name="harga_diskon"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              defaultValue={awal?.harga_diskon ?? ''}
+              placeholder="Kosongkan bila tidak ada"
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-neutral-600">Berlaku sampai</label>
+            <input
+              type="date"
+              name="diskon_sampai"
+              defaultValue={awal?.diskon_sampai ? awal.diskon_sampai.slice(0, 10) : ''}
+              className={inputCls}
+            />
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-neutral-500">Harga diskon harus lebih kecil dari harga normal. Tanpa tanggal, diskon berlaku terus.</p>
       </div>
 
       {awal && (

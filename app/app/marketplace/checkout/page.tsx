@@ -4,9 +4,10 @@ import { ChevronLeft, Lock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { buatPesanan } from '@/lib/actions/marketplace';
 import { rupiah } from '@/lib/admin/data';
+import { hargaAktif } from '@/lib/diskon';
 
 type Item = { id: string; produk_id: string; jumlah: number };
-type Produk = { id: string; nama: string; harga: number | string; toko_id: string; status: string | null };
+type Produk = { id: string; nama: string; harga: number | string; harga_diskon?: number | string | null; diskon_sampai?: string | null; toko_id: string; status: string | null };
 
 export default async function CheckoutPage({
   searchParams,
@@ -30,7 +31,7 @@ export default async function CheckoutPage({
 
   const { data: pData } = await supabase
     .from('produk')
-    .select('id, nama, harga, toko_id, status')
+    .select('id, nama, harga, harga_diskon, diskon_sampai, toko_id, status')
     .in('id', items.map((i) => i.produk_id));
   const produkMap = new Map(((pData ?? []) as Produk[]).map((p) => [p.id, p]));
 
@@ -46,7 +47,7 @@ export default async function CheckoutPage({
     const p = produkMap.get(item.produk_id);
     if (!p) continue;
     const g = grup.get(p.toko_id) ?? { nama: namaToko.get(p.toko_id) ?? 'Toko', rows: [], sub: 0 };
-    const sub = item.jumlah * Number(p.harga);
+    const sub = item.jumlah * hargaAktif(p);
     g.rows.push({ item, p });
     g.sub += sub;
     grup.set(p.toko_id, g);
@@ -92,7 +93,7 @@ export default async function CheckoutPage({
                   <span className="min-w-0 truncate">
                     {p.nama} × {item.jumlah}
                   </span>
-                  <span className="shrink-0">{rupiah(item.jumlah * Number(p.harga))}</span>
+                  <span className="shrink-0">{rupiah(item.jumlah * hargaAktif(p))}</span>
                 </div>
               ))}
             </div>

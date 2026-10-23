@@ -1,18 +1,22 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Search, MapPin, Plus, ChevronRight, ChevronDown, Users } from 'lucide-react';
+import { ArrowLeft, Search, MapPin, Plus, ChevronRight, ChevronDown, Users, FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import ChatButton from '@/app/app/chat/_components/chat-button';
 
 export const dynamic = 'force-dynamic';
 
-type SP = { q?: string; k?: string; kec?: string };
+type SP = { q?: string; k?: string; kec?: string; ready?: string };
 type Pekerja = {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
   kecamatan: string | null;
   skills: string[] | null;
+  online: boolean | null;
+  tarif: number | string | null;
+  satuan_tarif: string | null;
+  jumlah_dokumen: number | null;
 };
 
 function buatHref(sp: SP, o: Partial<SP>) {
@@ -21,6 +25,7 @@ function buatHref(sp: SP, o: Partial<SP>) {
   if (m.q) p.set('q', m.q);
   if (m.k) p.set('k', m.k);
   if (m.kec) p.set('kec', m.kec);
+  if (m.ready) p.set('ready', m.ready);
   const s = p.toString();
   return s ? '/cari-pekerja?' + s : '/cari-pekerja';
 }
@@ -38,7 +43,7 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
 
   const [{ data: kecList }, { data }] = await Promise.all([
     supabase.from('kecamatan').select('id, nama').order('nama'),
-    supabase.rpc('app_cari_pekerja', { p_q: q || null, p_kecamatan: sp.kec || null }),
+    supabase.rpc('app_cari_pekerja', { p_q: q || null, p_kecamatan: sp.kec || null, p_online: sp.ready === '1' }),
   ]);
   const semua = (data ?? []) as Pekerja[];
 
@@ -115,6 +120,10 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
               </div>
+              <label className="flex items-center gap-1.5 whitespace-nowrap text-sm text-neutral-700">
+                <input type="checkbox" name="ready" value="1" defaultChecked={sp.ready === '1'} />
+                Hanya yang ready
+              </label>
               <button type="submit" className="rounded-lg bg-neutral-900 px-5 text-sm font-medium text-white hover:bg-neutral-700">
                 Cari
               </button>
@@ -130,7 +139,9 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
               <Users className="mx-auto h-8 w-8 text-neutral-300" />
               <p className="mt-3 font-semibold text-neutral-900">Belum ada pekerja yang cocok</p>
               <p className="mt-1 text-sm text-neutral-500">
-                Pekerja muncul di sini setelah mengisi keahlian di profilnya. Coba ganti kecamatan, atau pasang lowongan.
+                {sp.ready === '1'
+                  ? 'Belum ada pekerja yang sedang ready. Matikan filter "Hanya yang ready" untuk melihat semua.'
+                  : 'Pekerja muncul di sini setelah mengisi keahlian di profilnya. Coba ganti kecamatan, atau pasang lowongan.'}
               </p>
               <Link href="/kerja/posting" className="mt-4 inline-flex rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-600">
                 Pasang lowongan
@@ -191,7 +202,20 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                           </span>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-neutral-900">{nama}</p>
+                          <p className="flex items-center gap-2 truncate font-semibold text-neutral-900">
+                            <span className="truncate">{nama}</span>
+                            {p.online && (
+                              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-xs font-bold text-primary-700">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary-500" /> Ready
+                              </span>
+                            )}
+                          </p>
+                          {Number(p.tarif ?? 0) > 0 && (
+                            <p className="mt-0.5 text-sm font-semibold text-primary-700">
+                              Rp {Number(p.tarif).toLocaleString('id-ID')}
+                              {p.satuan_tarif ? ' / ' + p.satuan_tarif : ''}
+                            </p>
+                          )}
                           {p.kecamatan && (
                             <p className="mt-0.5 flex items-center gap-1 text-sm text-neutral-500">
                               <MapPin className="h-3.5 w-3.5 shrink-0" />
@@ -207,6 +231,14 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                           </span>
                         ))}
                       </div>
+                      {Number(p.jumlah_dokumen ?? 0) > 0 && (
+                        <Link
+                          href={'/cari-pekerja/' + p.id + '?n=' + encodeURIComponent(nama)}
+                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
+                        >
+                          <FileText className="h-4 w-4" /> Lihat sertifikat & dokumen ({p.jumlah_dokumen})
+                        </Link>
+                      )}
                       <div className="mt-4 flex flex-wrap gap-2">
                         <ChatButton lawanId={p.id} label={'Pekerja: ' + nama} href="/cari-pekerja" teks="Chat pekerja" kecil />
                         <Link

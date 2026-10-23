@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { tambahKeKeranjang, kirimUlasan } from '@/lib/actions/marketplace';
 import { rupiah, waktuRelatif } from '@/lib/admin/data';
 import ChatButton from '@/app/app/chat/_components/chat-button';
+import HargaProduk from '@/components/harga-produk';
 
 
 type Produk = {
@@ -52,7 +53,7 @@ export default async function ProdukDetailPage({
 
   const { data: pd } = await supabase
     .from('produk')
-    .select('id, toko_id, kategori_id, nama, deskripsi, harga, satuan, stok, foto_url')
+    .select('id, toko_id, kategori_id, nama, deskripsi, harga, harga_diskon, diskon_sampai, satuan, stok, foto_url')
     .eq('id', id)
     .maybeSingle();
   if (!pd) notFound();
@@ -125,7 +126,7 @@ export default async function ProdukDetailPage({
       )}
 
       <h1 className="mt-4 font-display text-2xl font-bold leading-tight">{produk.nama}</h1>
-      <div className="mt-1 text-2xl font-bold text-secondary-700">{rupiah(produk.harga)}{produk.satuan && <span className="text-xs font-normal text-neutral-500"> / {produk.satuan}</span>}</div>
+      <div className="mt-1 text-2xl font-bold text-secondary-700"><HargaProduk p={produk} fmt={rupiah} />{produk.satuan && <span className="text-xs font-normal text-neutral-500"> / {produk.satuan}</span>}</div>
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
         {ulasan.length > 0 && (
           <span className="inline-flex items-center gap-1.5">

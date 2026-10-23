@@ -36,6 +36,7 @@ export default function BuatTokoForm() {
         setError(json?.error ?? `Gagal menyimpan (HTTP ${res.status})`);
         return;
       }
+      router.push('/toko-saya');
       router.refresh();
     } catch {
       setError('Tidak bisa terhubung ke server');

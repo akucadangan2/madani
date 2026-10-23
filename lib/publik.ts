@@ -18,6 +18,8 @@ export type Produk = {
   id: string;
   nama: string;
   harga: number | null;
+  harga_diskon?: number | null;
+  diskon_sampai?: string | null;
   satuan: string | null;
   stok: number | null;
   foto_url: string | string[] | null;
@@ -68,7 +70,7 @@ function anon() {
 }
 
 const LOWONGAN_SELECT = 'id, judul, upah, satuan_upah, created_at, kategori(nama), kecamatan(nama)';
-const PRODUK_SELECT = 'id, nama, harga, satuan, stok, foto_url, toko(nama_toko)';
+const PRODUK_SELECT = 'id, nama, harga, harga_diskon, diskon_sampai, satuan, stok, foto_url, toko(nama_toko)';
 
 export async function daftarLowongan(opsi: { q?: string; kec?: string }): Promise<Lowongan[]> {
   const sb = anon();
@@ -150,7 +152,7 @@ export const ambilProduk = cache(async (id: string): Promise<ProdukDetail | null
   try {
     const { data, error } = await sb
       .from('produk')
-      .select('id, nama, deskripsi, harga, satuan, stok, foto_url, status, toko(nama_toko)')
+      .select('id, nama, deskripsi, harga, harga_diskon, diskon_sampai, satuan, stok, foto_url, status, toko(nama_toko)')
       .eq('id', id)
       .maybeSingle();
     if (error) console.error('[publik] ambilProduk:', error.message);

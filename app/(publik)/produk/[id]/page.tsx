@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ShoppingBag, Store } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import HargaProduk from '@/components/harga-produk';
+import { hargaAktif } from '@/lib/diskon';
 import { ambilProduk, fotoList, rupiah, satu } from '@/lib/publik';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return { title: 'Produk tidak ditemukan' };
   return {
     title: p.nama,
-    description: `${rupiah(p.harga)}. Produk dari toko sekitar di MADANI.`,
+    description: `${rupiah(hargaAktif(p))}. Produk dari toko sekitar di MADANI.`,
   };
 }
 
@@ -58,7 +60,7 @@ export default async function ProdukDetailPage({ params }: Props) {
 
         <div>
           <h1 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl">{p.nama}</h1>
-          <p className="mt-3 font-display text-3xl font-bold text-ink-700">{rupiah(p.harga)}{p.satuan && <span className="text-base font-medium text-neutral-500"> / {p.satuan}</span>}</p>
+          <p className="mt-3 font-display text-3xl font-bold text-ink-700"><HargaProduk p={p} fmt={rupiah} />{p.satuan && <span className="text-base font-medium text-neutral-500"> / {p.satuan}</span>}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
             {toko && (
               <span className="inline-flex items-center gap-1.5">

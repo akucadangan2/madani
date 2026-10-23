@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { tokoAktif } from '@/lib/toko-aktif';
 import { ubahProduk } from '@/lib/actions/produk';
 import ProdukForm from '../produk-form';
 
@@ -15,12 +16,12 @@ export default async function EditProdukPage({ params }: { params: Promise<{ id:
   if (!user) redirect('/login');
 
   const supabase = await createClient();
-  const { data: toko } = await supabase.from('toko').select('id').eq('penjual_id', user.id).maybeSingle();
+  const { data: toko } = await tokoAktif(supabase, user.id);
   if (!toko) redirect('/toko-saya');
 
   const { data: p } = await supabase
     .from('produk')
-    .select('id, nama, deskripsi, kategori_id, harga, satuan, stok, status, foto_url')
+    .select('id, nama, deskripsi, kategori_id, harga, harga_diskon, diskon_sampai, satuan, stok, status, foto_url')
     .eq('id', id)
     .eq('toko_id', toko.id)
     .maybeSingle();
@@ -49,6 +50,8 @@ export default async function EditProdukPage({ params }: { params: Promise<{ id:
           deskripsi: p.deskripsi ?? '',
           kategori_id: p.kategori_id ?? '',
           harga: Number(p.harga),
+          harga_diskon: p.harga_diskon ? Number(p.harga_diskon) : null,
+          diskon_sampai: p.diskon_sampai ?? null,
           stok: Number(p.stok ?? 0),
           satuan: p.satuan ?? '',
           status: p.status ?? 'aktif',

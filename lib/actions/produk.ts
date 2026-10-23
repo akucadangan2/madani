@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { tokoAktif } from '@/lib/toko-aktif';
 
 const BUCKET = 'produk-foto';
 const MAKS_FOTO = 4;
@@ -13,6 +14,8 @@ type DataProduk = {
   deskripsi: string | null;
   kategori_id: string | null;
   harga: number;
+  harga_diskon: number | null;
+  diskon_sampai: string | null;
   stok: number;
   foto_url: string[];
   satuan: string | null;
@@ -24,11 +27,7 @@ async function konteks() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: toko } = await supabase
-    .from('toko')
-    .select('id, status_verifikasi')
-    .eq('penjual_id', user.id)
-    .maybeSingle();
+  const { data: toko } = await tokoAktif(supabase, user.id, 'status_verifikasi');
   return {
     supabase,
     user,
@@ -49,6 +48,9 @@ function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error:
   const kategoriId = String(fd.get('kategori_id') ?? '').trim();
   const harga = Number(fd.get('harga'));
   const stok = Number(fd.get('stok'));
+  const diskonMentah = String(fd.get('harga_diskon') ?? '').trim();
+  const hargaDiskon = diskonMentah === '' ? null : Number(diskonMentah);
+  const sampaiMentah = String(fd.get('diskon_sampai') ?? '').trim();
   const satuan = String(fd.get('satuan') ?? '').trim().slice(0, 20);
   const foto = fd
     .getAll('foto_url')
@@ -63,6 +65,15 @@ function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error:
   if (!Number.isInteger(stok) || stok < 0 || stok > 100000) {
     return { error: 'Stok harus angka bulat 0 atau lebih.' };
   }
+  if (hargaDiskon !== null && (!Number.isInteger(hargaDiskon) || hargaDiskon <= 0 || hargaDiskon >= harga)) {
+    return { error: 'Harga diskon harus angka bulat dan lebih kecil dari harga normal.' };
+  }
+  let diskonSampai: string | null = null;
+  if (hargaDiskon !== null && sampaiMentah) {
+    const d = new Date(sampaiMentah + 'T23:59:59+07:00');
+    if (Number.isNaN(d.getTime())) return { error: 'Tanggal berlaku diskon tidak valid.' };
+    diskonSampai = d.toISOString();
+  }
   if (foto.length > MAKS_FOTO) return { error: `Maksimal ${MAKS_FOTO} foto.` };
 
   const awalan = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${userId}/`;
@@ -74,6 +85,8 @@ function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error:
       deskripsi: deskripsi || null,
       kategori_id: kategoriId || null,
       harga,
+      harga_diskon: hargaDiskon,
+      diskon_sampai: diskonSampai,
       stok,
       foto_url: foto,
       satuan: satuan || null,

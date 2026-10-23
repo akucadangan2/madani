@@ -4,12 +4,16 @@ import { ChevronLeft, Minus, Package, Plus, ShoppingCart, Trash2 } from 'lucide-
 import { createClient } from '@/lib/supabase/server';
 import { updateJumlahKeranjang, hapusDariKeranjang } from '@/lib/actions/marketplace';
 import { rupiah } from '@/lib/admin/data';
+import HargaProduk from '@/components/harga-produk';
+import { hargaAktif } from '@/lib/diskon';
 
 type Item = { id: string; produk_id: string; jumlah: number };
 type Produk = {
   id: string;
   nama: string;
   harga: number | string;
+  harga_diskon?: number | string | null;
+  diskon_sampai?: string | null;
   stok: number;
   foto_url: string[] | null;
   toko_id: string;
@@ -32,7 +36,7 @@ export default async function KeranjangPage() {
 
   const pids = items.map((i) => i.produk_id);
   const { data: pData } = pids.length
-    ? await supabase.from('produk').select('id, nama, harga, stok, foto_url, toko_id, status').in('id', pids)
+    ? await supabase.from('produk').select('id, nama, harga, harga_diskon, diskon_sampai, stok, foto_url, toko_id, status').in('id', pids)
     : { data: [] as Produk[] };
   const produkMap = new Map(((pData ?? []) as Produk[]).map((p) => [p.id, p]));
 
@@ -55,7 +59,7 @@ export default async function KeranjangPage() {
     const g = grup.get(p.toko_id) ?? { nama: namaToko.get(p.toko_id) ?? 'Toko', rows: [] };
     g.rows.push({ item, p });
     grup.set(p.toko_id, g);
-    total += item.jumlah * Number(p.harga);
+    total += item.jumlah * hargaAktif(p);
   }
 
   const btn =
@@ -97,7 +101,7 @@ export default async function KeranjangPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-neutral-900">{p.nama}</div>
-                    <div className="text-sm font-bold text-secondary-700">{rupiah(p.harga)}</div>
+                    <div className="text-sm font-bold text-secondary-700"><HargaProduk p={p} fmt={rupiah} /></div>
                     {item.jumlah > p.stok && (
                       <div className="text-xs font-medium text-red-600">Stok tersisa {p.stok}</div>
                     )}
