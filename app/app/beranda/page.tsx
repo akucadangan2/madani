@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import {
   Store, Package, ClipboardList, ShoppingBag, ShoppingCart, Briefcase,
-  FilePlus, History, Wallet, ShieldCheck, Landmark, ChevronRight, type LucideIcon,
+  FilePlus, History, Search, Wallet, ShieldCheck, Landmark, ChevronRight, type LucideIcon,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -50,6 +50,7 @@ const ROLE_SECTIONS: Record<string, { title: string; tone: Tone; items: Item[] }
     tone: 'kerja',
     items: [
       { href: '/kerja/posting', label: 'Posting lowongan', desc: 'Buat lowongan baru', icon: FilePlus },
+      { href: '/cari-pekerja', label: 'Cari pekerja', desc: 'Temukan pekerja di kecamatanmu', icon: Search },
       { href: '/kerja/riwayat', label: 'Riwayat kerja', desc: 'Pantau pekerjaan yang kamu posting', icon: History },
     ],
   },

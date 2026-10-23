@@ -100,6 +100,10 @@ export default async function KerjaListPage({
             </Link>
           </div>
 
+          <Link href="/cari-pekerja" className="mt-3 inline-block text-sm font-semibold text-primary-600 hover:underline">
+            Mau cari pekerja? Lihat daftar pekerja di kecamatanmu
+          </Link>
+
           {/* Search + sort */}
           <form method="GET" className="mt-4 flex flex-col gap-2.5 sm:flex-row">
             <input type="hidden" name="kategori" value={sp.kategori ?? ''} />
