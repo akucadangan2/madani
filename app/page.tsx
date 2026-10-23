@@ -945,28 +945,6 @@ export default async function HomePage() {
         </div>
         <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-white/40 sm:px-5">© MADANI. Seluruh hak dilindungi.</p>
       </footer>
-
-      {/* Penutup */}
-      <section className="bg-ink-700 pb-16 pt-2 text-white sm:pb-20">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-4 sm:px-5 md:flex-row md:items-center">
-          <div>
-            <h2 className="max-w-xl text-2xl font-extrabold leading-tight text-white sm:text-3xl md:text-4xl">
-              Mulai dari kecamatanmu sendiri.
-            </h2>
-            <p className="mt-3 max-w-xl text-white/70">
-              Aplikasi Android dan iOS sedang disiapkan. Sementara itu, MADANI sudah bisa dipakai lewat
-              browser di HP maupun laptop.
-            </p>
-            <p className="mt-3 max-w-xl text-sm text-white/50">
-              Sebagian fitur, termasuk pembayaran, masih dalam tahap uji coba bertahap.
-            </p>
-          </div>
-          <Maskot pose="jempol" className="h-32 w-auto shrink-0 md:h-44" />
-          <Link href="/register" className="w-full rounded-full bg-primary-400 px-8 py-4 text-center font-semibold text-ink-900 hover:bg-primary-300 md:w-auto">
-            Daftar gratis
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }
