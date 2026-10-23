@@ -68,7 +68,7 @@ export default async function ProdukPage({
                   </div>
                   <div className="p-3">
                     <p className="line-clamp-2 text-sm font-bold leading-snug text-ink-700">{p.nama}</p>
-                    <p className="mt-1 font-display text-base font-bold text-ink-700">{rupiah(p.harga)}</p>
+                    <p className="mt-1 font-display text-base font-bold text-ink-700">{rupiah(p.harga)}{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}</p>
                     <p className="mt-0.5 truncate text-xs text-neutral-500">{satu(p.toko)?.nama_toko ?? ''}</p>
                   </div>
                 </Link>

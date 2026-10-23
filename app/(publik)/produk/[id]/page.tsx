@@ -58,7 +58,7 @@ export default async function ProdukDetailPage({ params }: Props) {
 
         <div>
           <h1 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl">{p.nama}</h1>
-          <p className="mt-3 font-display text-3xl font-bold text-ink-700">{rupiah(p.harga)}</p>
+          <p className="mt-3 font-display text-3xl font-bold text-ink-700">{rupiah(p.harga)}{p.satuan && <span className="text-base font-medium text-neutral-500"> / {p.satuan}</span>}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
             {toko && (
               <span className="inline-flex items-center gap-1.5">

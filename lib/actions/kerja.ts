@@ -11,6 +11,7 @@ const postingSchema = z.object({
   kategoriId: z.string().min(1, 'Pilih kategori pekerjaan'),
   kecamatanId: z.string().min(1, 'Pilih kecamatan'),
   upah: z.coerce.number({ invalid_type_error: 'Upah harus berupa angka' }).positive('Upah harus lebih dari 0'),
+  satuanUpah: z.enum(['hari', 'minggu', 'bulan', 'pertemuan', 'paket']).default('hari'),
 });
 
 export type PostingKerjaResult =
@@ -28,6 +29,7 @@ export async function postingKerja(formData: FormData): Promise<PostingKerjaResu
     kategoriId: formData.get('kategoriId'),
     kecamatanId: formData.get('kecamatanId'),
     upah: formData.get('upah'),
+    satuanUpah: formData.get('satuanUpah') ?? 'hari',
   });
 
   if (!parsed.success) {
@@ -42,6 +44,7 @@ export async function postingKerja(formData: FormData): Promise<PostingKerjaResu
       kategori_id: parsed.data.kategoriId,
       kecamatan_id: parsed.data.kecamatanId,
       upah: parsed.data.upah,
+      satuan_upah: parsed.data.satuanUpah,
       status: 'terbuka',
       pemberi_kerja_id: user.id,
     })

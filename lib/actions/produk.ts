@@ -15,6 +15,7 @@ type DataProduk = {
   harga: number;
   stok: number;
   foto_url: string[];
+  satuan: string | null;
 };
 
 async function konteks() {
@@ -48,6 +49,7 @@ function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error:
   const kategoriId = String(fd.get('kategori_id') ?? '').trim();
   const harga = Number(fd.get('harga'));
   const stok = Number(fd.get('stok'));
+  const satuan = String(fd.get('satuan') ?? '').trim().slice(0, 20);
   const foto = fd
     .getAll('foto_url')
     .map((v) => String(v))
@@ -74,6 +76,7 @@ function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error:
       harga,
       stok,
       foto_url: foto,
+      satuan: satuan || null,
     },
   };
 }

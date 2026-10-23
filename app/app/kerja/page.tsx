@@ -229,6 +229,7 @@ export default async function KerjaListPage({
                 <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-3.5">
                   <span className="text-base font-bold text-primary-700">
                     {formatRupiah(task.upah)}
+                    {task.satuan_upah && <span className="ml-1 text-xs font-medium text-neutral-500">/ {task.satuan_upah}</span>}
                   </span>
                   <span className="flex items-center gap-1 text-sm font-medium text-neutral-400 group-hover:text-primary-600">
                     Detail <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />

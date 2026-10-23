@@ -4,7 +4,7 @@ import { ChevronLeft, MapPin, Package, Store } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { rupiah } from '@/lib/admin/data';
 
-type Produk = { id: string; nama: string; harga: number | string; stok: number; foto_url: string[] | null };
+type Produk = { id: string; nama: string; harga: number | string; satuan?: string | null; stok: number; foto_url: string[] | null };
 
 export default async function TokoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,7 +29,7 @@ export default async function TokoDetailPage({ params }: { params: Promise<{ id:
       : Promise.resolve({ data: null as { nama: string } | null }),
     supabase
       .from('produk')
-      .select('id, nama, harga, stok, foto_url')
+      .select('id, nama, harga, satuan, stok, foto_url')
       .eq('toko_id', id)
       .eq('status', 'aktif')
       .order('created_at', { ascending: false }),
@@ -82,7 +82,7 @@ export default async function TokoDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div className="p-3">
               <h3 className="line-clamp-2 text-sm font-medium text-neutral-900">{p.nama}</h3>
-              <p className="mt-1 text-sm font-bold text-secondary-700">{rupiah(p.harga)}</p>
+              <p className="mt-1 text-sm font-bold text-secondary-700">{rupiah(p.harga)}{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}</p>
             </div>
           </Link>
         ))}

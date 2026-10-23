@@ -7,6 +7,7 @@ export type Lowongan = {
   id: string;
   judul: string;
   upah: number | null;
+  satuan_upah: string | null;
   created_at: string | null;
   kategori: Relasi<{ nama: string }>;
   kecamatan: Relasi<{ nama: string }>;
@@ -17,6 +18,7 @@ export type Produk = {
   id: string;
   nama: string;
   harga: number | null;
+  satuan: string | null;
   stok: number | null;
   foto_url: string | string[] | null;
   toko: Relasi<{ nama_toko: string }>;
@@ -31,6 +33,10 @@ export function satu<T>(v: Relasi<T>): T | null {
 
 export function rupiah(n: number | null) {
   return `Rp${Math.round(n ?? 0).toLocaleString('id-ID')}`;
+}
+
+export function satuanLabel(s: string | null | undefined) {
+  return s ? ' per ' + s : '';
 }
 
 export function waktuRelatif(iso: string | null) {
@@ -61,8 +67,8 @@ function anon() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-const LOWONGAN_SELECT = 'id, judul, upah, created_at, kategori(nama), kecamatan(nama)';
-const PRODUK_SELECT = 'id, nama, harga, stok, foto_url, toko(nama_toko)';
+const LOWONGAN_SELECT = 'id, judul, upah, satuan_upah, created_at, kategori(nama), kecamatan(nama)';
+const PRODUK_SELECT = 'id, nama, harga, satuan, stok, foto_url, toko(nama_toko)';
 
 export async function daftarLowongan(opsi: { q?: string; kec?: string }): Promise<Lowongan[]> {
   const sb = anon();
@@ -105,7 +111,7 @@ export const ambilLowongan = cache(async (id: string): Promise<LowonganDetail | 
   try {
     const { data, error } = await sb
       .from('tasks')
-      .select('id, judul, deskripsi, upah, status, created_at, kategori(nama), kecamatan(nama)')
+      .select('id, judul, deskripsi, upah, satuan_upah, status, created_at, kategori(nama), kecamatan(nama)')
       .eq('id', id)
       .maybeSingle();
     if (error) console.error('[publik] ambilLowongan:', error.message);
@@ -144,7 +150,7 @@ export const ambilProduk = cache(async (id: string): Promise<ProdukDetail | null
   try {
     const { data, error } = await sb
       .from('produk')
-      .select('id, nama, deskripsi, harga, stok, foto_url, status, toko(nama_toko)')
+      .select('id, nama, deskripsi, harga, satuan, stok, foto_url, status, toko(nama_toko)')
       .eq('id', id)
       .maybeSingle();
     if (error) console.error('[publik] ambilProduk:', error.message);

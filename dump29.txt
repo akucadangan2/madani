@@ -1,0 +1,2525 @@
+
+===== app\(publik)\lowongan\[id]\page.tsx =====
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, Briefcase, MapPin, Clock } from 'lucide-react';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { ambilLowongan, rupiah, satu, waktuRelatif } from '@/lib/publik';
+
+export const dynamic = 'force-dynamic';
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const t = await ambilLowongan(id);
+  if (!t) return { title: 'Lowongan tidak ditemukan' };
+  return {
+    title: t.judul,
+    description: `Upah ${rupiah(t.upah)}. Lowongan kerja harian di kecamatanmu.`,
+  };
+}
+
+export default async function LowonganDetailPage({ params }: Props) {
+  const { id } = await params;
+  const [t, user] = await Promise.all([ambilLowongan(id), getCurrentUser()]);
+  if (!t) notFound();
+
+  const kategori = satu(t.kategori)?.nama;
+  const kecamatan = satu(t.kecamatan)?.nama;
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-5 sm:py-12">
+      <Link href="/lowongan" className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary-700 hover:underline">
+        <ArrowLeft className="h-4 w-4" /> Semua lowongan
+      </Link>
+
+      <div className="mt-5 rounded-[24px] border border-neutral-200 p-5 sm:p-8">
+        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-500/10 text-secondary-700">
+          <Briefcase className="h-6 w-6" />
+        </span>
+        <h1 className="mt-4 text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl">{t.judul}</h1>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-neutral-600">
+          {kecamatan && (
+            <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{kecamatan}</span>
+          )}
+          {kategori && <span className="rounded-full bg-ink-50 px-3 py-1 font-medium">{kategori}</span>}
+          <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" />{waktuRelatif(t.created_at)}</span>
+        </div>
+
+        <p className="mt-5 inline-block rounded-md bg-sun-400 px-3 py-1 text-lg font-bold text-ink-800">{rupiah(t.upah)}</p>
+
+        <h2 className="mt-7 font-display text-lg font-bold text-ink-700">Deskripsi pekerjaan</h2>
+        <p className="mt-2 whitespace-pre-line leading-relaxed text-neutral-700">
+          {t.deskripsi?.trim() || 'Pemberi kerja belum menambahkan deskripsi.'}
+        </p>
+      </div>
+
+      <div className="mt-6 rounded-2xl bg-ink-50 p-5 sm:p-6">
+        {user ? (
+          <>
+            <p className="font-display text-lg font-bold text-ink-700">Tertarik dengan lowongan ini?</p>
+            <p className="mt-1 text-sm text-neutral-600">Buka beranda untuk melamar dan melanjutkan lewat chat.</p>
+            <Link href="/beranda" className="mt-4 inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
+              Ke beranda
+            </Link>
+          </>
+        ) : (
+          <>
+            <p className="font-display text-lg font-bold text-ink-700">Mau melamar lowongan ini?</p>
+            <p className="mt-1 text-sm text-neutral-600">
+              Daftar gratis lewat kode WhatsApp. Untuk melamar, kamu perlu verifikasi KTP lebih dulu.
+            </p>
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <Link href="/register" className="inline-flex justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800">
+                Daftar untuk melamar
+              </Link>
+              <Link href="/login" className="inline-flex justify-center rounded-full border-2 border-ink-700 px-7 py-3.5 font-semibold text-ink-700 hover:bg-white">
+                Saya sudah punya akun
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
+===== app\(publik)\lowongan\page.tsx =====
+import Link from 'next/link';
+import { Briefcase } from 'lucide-react';
+import { daftarKecamatan, daftarLowongan, rupiah, satu, waktuRelatif } from '@/lib/publik';
+
+export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: 'Lowongan kerja terbaru di kecamatanmu',
+  description: 'Lihat lowongan kerja harian terbaru dari warga sekitar, tanpa perlu login.',
+};
+
+export default async function LowonganPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; kec?: string }>;
+}) {
+  const { q = '', kec = '' } = await searchParams;
+  const [daftar, kecamatan] = await Promise.all([daftarLowongan({ q, kec }), daftarKecamatan()]);
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-5 sm:py-12">
+      <h1 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-4xl">Lowongan kerja terbaru</h1>
+      <p className="mt-2 max-w-xl text-neutral-600">
+        Lowongan dari warga sekitar. Kamu baru perlu daftar saat mau melamar.
+      </p>
+
+      <form method="get" className="mt-6 flex flex-col gap-2 sm:flex-row">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Cari lowongan, mis. tukang cat"
+          className="h-12 flex-1 rounded-full border border-neutral-300 px-5 text-base outline-none focus:border-ink-700"
+        />
+        <select
+          name="kec"
+          defaultValue={kec}
+          className="h-12 rounded-full border border-neutral-300 bg-white px-4 text-base outline-none focus:border-ink-700 sm:w-56"
+        >
+          <option value="">Semua kecamatan</option>
+          {kecamatan.map((k) => (
+            <option key={k.id} value={k.id}>{k.nama}</option>
+          ))}
+        </select>
+        <button type="submit" className="h-12 rounded-full bg-ink-700 px-7 font-semibold text-white hover:bg-ink-800">
+          Cari
+        </button>
+      </form>
+
+      {daftar.length === 0 ? (
+        <p className="mt-8 rounded-2xl bg-ink-50 p-6 text-neutral-600">
+          Belum ada lowongan yang cocok. Coba kata kunci atau kecamatan lain, atau daftar untuk memasang lowongan pertamamu.
+        </p>
+      ) : (
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {daftar.map((t) => {
+            const info = [satu(t.kategori)?.nama, satu(t.kecamatan)?.nama].filter(Boolean).join(' · ');
+            return (
+              <li key={t.id}>
+                <Link
+                  href={`/lowongan/${t.id}`}
+                  className="block h-full rounded-2xl border border-neutral-200 bg-white p-4 transition hover:border-ink-700"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-500/10 text-secondary-700">
+                      <Briefcase className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 font-display text-base font-bold leading-snug text-ink-700">{t.judul}</p>
+                      {info && <p className="mt-1 truncate text-sm text-neutral-500">{info}</p>}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className="rounded-md bg-sun-400 px-2 py-0.5 text-sm font-bold text-ink-800">{rupiah(t.upah)}</span>
+                    <span className="text-xs text-neutral-500">{waktuRelatif(t.created_at)}</span>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="mt-10">
+        <Link href="/register" className="inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
+          Mau melamar? Daftar gratis
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+===== app\(publik)\produk\[id]\page.tsx =====
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, ShoppingBag, Store } from 'lucide-react';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { ambilProduk, fotoList, rupiah, satu } from '@/lib/publik';
+
+export const dynamic = 'force-dynamic';
+
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const p = await ambilProduk(id);
+  if (!p) return { title: 'Produk tidak ditemukan' };
+  return {
+    title: p.nama,
+    description: `${rupiah(p.harga)}. Produk dari toko sekitar di MADANI.`,
+  };
+}
+
+export default async function ProdukDetailPage({ params }: Props) {
+  const { id } = await params;
+  const [p, user] = await Promise.all([ambilProduk(id), getCurrentUser()]);
+  if (!p) notFound();
+
+  const fotos = fotoList(p.foto_url);
+  const toko = satu(p.toko)?.nama_toko;
+  const habis = (p.stok ?? 0) <= 0;
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-5 sm:py-12">
+      <Link href="/produk" className="inline-flex items-center gap-1.5 text-sm font-semibold text-secondary-700 hover:underline">
+        <ArrowLeft className="h-4 w-4" /> Semua produk
+      </Link>
+
+      <div className="mt-5 grid gap-6 md:grid-cols-2 md:gap-10">
+        <div>
+          <div className="aspect-square overflow-hidden rounded-[24px] border border-neutral-200 bg-ink-50">
+            {fotos[0] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={fotos[0]} alt={p.nama} className="h-full w-full object-cover" />
+            ) : (
+              <span className="flex h-full w-full items-center justify-center text-neutral-400">
+                <ShoppingBag className="h-14 w-14" />
+              </span>
+            )}
+          </div>
+          {fotos.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {fotos.slice(1, 6).map((f) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={f} src={f} alt="" loading="lazy" className="h-20 w-20 shrink-0 rounded-xl border border-neutral-200 object-cover" />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-3xl">{p.nama}</h1>
+          <p className="mt-3 font-display text-3xl font-bold text-ink-700">{rupiah(p.harga)}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-600">
+            {toko && (
+              <span className="inline-flex items-center gap-1.5">
+                <Store className="h-4 w-4" /> {toko}
+              </span>
+            )}
+            <span className={`rounded-full px-3 py-1 font-medium ${habis ? 'bg-neutral-100 text-neutral-600' : 'bg-primary-500/20 text-ink-800'}`}>
+              {habis ? 'Stok habis' : `Stok ${p.stok}`}
+            </span>
+          </div>
+
+          <h2 className="mt-6 font-display text-lg font-bold text-ink-700">Deskripsi</h2>
+          <p className="mt-2 whitespace-pre-line leading-relaxed text-neutral-700">
+            {p.deskripsi?.trim() || 'Penjual belum menambahkan deskripsi.'}
+          </p>
+
+          <div className="mt-7 rounded-2xl bg-ink-50 p-5">
+            {user ? (
+              <>
+                <p className="font-display text-lg font-bold text-ink-700">Tertarik dengan produk ini?</p>
+                <p className="mt-1 text-sm text-neutral-600">Buka beranda untuk memesan atau bertanya ke penjual.</p>
+                <Link href="/beranda" className="mt-4 inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
+                  Ke beranda
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-lg font-bold text-ink-700">Mau memesan produk ini?</p>
+                <p className="mt-1 text-sm text-neutral-600">
+                  Daftar gratis lewat kode WhatsApp untuk memesan dan chat dengan penjual.
+                </p>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Link href="/register" className="inline-flex justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800">
+                    Daftar untuk memesan
+                  </Link>
+                  <Link href="/login" className="inline-flex justify-center rounded-full border-2 border-ink-700 px-7 py-3.5 font-semibold text-ink-700 hover:bg-white">
+                    Saya sudah punya akun
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+===== app\(publik)\produk\page.tsx =====
+import Link from 'next/link';
+import { ShoppingBag } from 'lucide-react';
+import { daftarProduk, fotoList, rupiah, satu } from '@/lib/publik';
+
+export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: 'Produk dari toko sekitar',
+  description: 'Lihat produk terbaru dari penjual satu kecamatan, tanpa perlu login.',
+};
+
+export default async function ProdukPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = '' } = await searchParams;
+  const daftar = await daftarProduk({ q });
+
+  return (
+    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-5 sm:py-12">
+      <h1 className="text-2xl font-extrabold leading-tight text-ink-700 sm:text-4xl">Produk dari toko sekitar</h1>
+      <p className="mt-2 max-w-xl text-neutral-600">
+        Produk terbaru dari penjual satu kecamatan. Kamu baru perlu daftar saat mau memesan.
+      </p>
+
+      <form method="get" className="mt-6 flex flex-col gap-2 sm:flex-row">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Cari produk, mis. nasi uduk"
+          className="h-12 flex-1 rounded-full border border-neutral-300 px-5 text-base outline-none focus:border-ink-700"
+        />
+        <button type="submit" className="h-12 rounded-full bg-ink-700 px-7 font-semibold text-white hover:bg-ink-800">
+          Cari
+        </button>
+      </form>
+
+      {daftar.length === 0 ? (
+        <p className="mt-8 rounded-2xl bg-ink-50 p-6 text-neutral-600">
+          Belum ada produk yang cocok. Coba kata kunci lain, atau daftar untuk membuka tokomu.
+        </p>
+      ) : (
+        <ul className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {daftar.map((p) => {
+            const foto = fotoList(p.foto_url)[0];
+            const habis = (p.stok ?? 0) <= 0;
+            return (
+              <li key={p.id}>
+                <Link
+                  href={`/produk/${p.id}`}
+                  className="block h-full overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:border-ink-700"
+                >
+                  <div className="relative aspect-square bg-ink-50">
+                    {foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={foto} alt={p.nama} loading="lazy" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-neutral-400">
+                        <ShoppingBag className="h-8 w-8" />
+                      </span>
+                    )}
+                    {habis && (
+                      <span className="absolute left-2 top-2 rounded bg-white px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                        Habis
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="line-clamp-2 text-sm font-bold leading-snug text-ink-700">{p.nama}</p>
+                    <p className="mt-1 font-display text-base font-bold text-ink-700">{rupiah(p.harga)}</p>
+                    <p className="mt-0.5 truncate text-xs text-neutral-500">{satu(p.toko)?.nama_toko ?? ''}</p>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="mt-10">
+        <Link href="/register" className="inline-flex w-full justify-center rounded-full bg-ink-700 px-7 py-3.5 font-semibold text-white hover:bg-ink-800 sm:w-auto">
+          Mau memesan atau berjualan? Daftar gratis
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+===== app\app\marketplace\checkout\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { ChevronLeft, Lock } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { buatPesanan } from '@/lib/actions/marketplace';
+import { rupiah } from '@/lib/admin/data';
+
+type Item = { id: string; produk_id: string; jumlah: number };
+type Produk = { id: string; nama: string; harga: number | string; toko_id: string; status: string | null };
+
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error: errMsg } = await searchParams;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: itemData } = await supabase
+    .from('keranjang_item')
+    .select('id, produk_id, jumlah')
+    .eq('pembeli_id', user.id);
+  const items = (itemData ?? []) as Item[];
+  if (items.length === 0) redirect('/marketplace/keranjang');
+
+  const { data: pData } = await supabase
+    .from('produk')
+    .select('id, nama, harga, toko_id, status')
+    .in('id', items.map((i) => i.produk_id));
+  const produkMap = new Map(((pData ?? []) as Produk[]).map((p) => [p.id, p]));
+
+  const tokoIds = Array.from(new Set(Array.from(produkMap.values()).map((p) => p.toko_id)));
+  const { data: tData } = tokoIds.length
+    ? await supabase.from('toko').select('id, nama_toko').in('id', tokoIds)
+    : { data: [] as { id: string; nama_toko: string }[] };
+  const namaToko = new Map(((tData ?? []) as { id: string; nama_toko: string }[]).map((t) => [t.id, t.nama_toko]));
+
+  const grup = new Map<string, { nama: string; rows: { item: Item; p: Produk }[]; sub: number }>();
+  let total = 0;
+  for (const item of items) {
+    const p = produkMap.get(item.produk_id);
+    if (!p) continue;
+    const g = grup.get(p.toko_id) ?? { nama: namaToko.get(p.toko_id) ?? 'Toko', rows: [], sub: 0 };
+    const sub = item.jumlah * Number(p.harga);
+    g.rows.push({ item, p });
+    g.sub += sub;
+    grup.set(p.toko_id, g);
+    total += sub;
+  }
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-6 pt-6">
+      <Link
+        href="/marketplace/keranjang"
+        className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900"
+      >
+        <ChevronLeft className="h-4 w-4" /> Keranjang
+      </Link>
+      <h1 className="mt-3 font-display text-2xl font-bold">Checkout</h1>
+
+      {errMsg && (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          {errMsg}
+        </div>
+      )}
+
+      <form action={buatPesanan} className="mt-5 space-y-4">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-neutral-800">Alamat pengiriman</label>
+          <textarea
+            name="alamat"
+            required
+            minLength={10}
+            rows={3}
+            placeholder="Nama penerima, alamat lengkap, patokan, dan nomor HP"
+            className="w-full rounded-2xl border border-neutral-200 bg-white px-3.5 py-3 text-sm outline-none focus:border-neutral-400"
+          />
+          <p className="mt-1 text-xs text-neutral-500">Barang diantar langsung oleh penjual di kecamatanmu.</p>
+        </div>
+
+        {Array.from(grup.entries()).map(([tokoId, g]) => (
+          <section key={tokoId} className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <h2 className="text-sm font-semibold">{g.nama}</h2>
+            <div className="mt-2 space-y-1">
+              {g.rows.map(({ item, p }) => (
+                <div key={item.id} className="flex justify-between gap-3 text-sm text-neutral-600">
+                  <span className="min-w-0 truncate">
+                    {p.nama} × {item.jumlah}
+                  </span>
+                  <span className="shrink-0">{rupiah(item.jumlah * Number(p.harga))}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between border-t border-neutral-100 pt-2 text-sm font-semibold">
+              <span>Subtotal</span>
+              <span>{rupiah(g.sub)}</span>
+            </div>
+          </section>
+        ))}
+
+        {grup.size > 1 && (
+          <p className="text-xs text-neutral-500">
+            Belanja dari {grup.size} toko akan dipecah menjadi {grup.size} pesanan terpisah.
+          </p>
+        )}
+
+        <div className="flex items-start gap-2 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900">
+          <Lock className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Dana ditahan platform sampai kamu menerima barang. <strong>Mode uji coba:</strong> pembayaran
+            disimulasikan, belum ada uang sungguhan yang bergerak.
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-4">
+          <span className="text-sm text-neutral-600">Total</span>
+          <span className="text-xl font-bold">{rupiah(total)}</span>
+        </div>
+
+        <button className="w-full rounded-2xl bg-ink-900 py-3.5 text-sm font-semibold text-white hover:opacity-90">
+          Buat pesanan
+        </button>
+      </form>
+    </div>
+  );
+}
+
+===== app\app\marketplace\keranjang\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { ChevronLeft, Minus, Package, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { updateJumlahKeranjang, hapusDariKeranjang } from '@/lib/actions/marketplace';
+import { rupiah } from '@/lib/admin/data';
+
+type Item = { id: string; produk_id: string; jumlah: number };
+type Produk = {
+  id: string;
+  nama: string;
+  harga: number | string;
+  stok: number;
+  foto_url: string[] | null;
+  toko_id: string;
+  status: string | null;
+};
+
+export default async function KeranjangPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: itemData } = await supabase
+    .from('keranjang_item')
+    .select('id, produk_id, jumlah')
+    .eq('pembeli_id', user.id)
+    .order('created_at', { ascending: true });
+  const items = (itemData ?? []) as Item[];
+
+  const pids = items.map((i) => i.produk_id);
+  const { data: pData } = pids.length
+    ? await supabase.from('produk').select('id, nama, harga, stok, foto_url, toko_id, status').in('id', pids)
+    : { data: [] as Produk[] };
+  const produkMap = new Map(((pData ?? []) as Produk[]).map((p) => [p.id, p]));
+
+  const tokoIds = Array.from(new Set(Array.from(produkMap.values()).map((p) => p.toko_id)));
+  const { data: tData } = tokoIds.length
+    ? await supabase.from('toko').select('id, nama_toko').in('id', tokoIds)
+    : { data: [] as { id: string; nama_toko: string }[] };
+  const namaToko = new Map(((tData ?? []) as { id: string; nama_toko: string }[]).map((t) => [t.id, t.nama_toko]));
+
+  // Kelompokkan per toko
+  const grup = new Map<string, { nama: string; rows: { item: Item; p: Produk }[] }>();
+  const hilang: Item[] = [];
+  let total = 0;
+  for (const item of items) {
+    const p = produkMap.get(item.produk_id);
+    if (!p || p.status !== 'aktif') {
+      hilang.push(item);
+      continue;
+    }
+    const g = grup.get(p.toko_id) ?? { nama: namaToko.get(p.toko_id) ?? 'Toko', rows: [] };
+    g.rows.push({ item, p });
+    grup.set(p.toko_id, g);
+    total += item.jumlah * Number(p.harga);
+  }
+
+  const btn =
+    'flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-40';
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-6 pt-6">
+      <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Belanja
+      </Link>
+      <h1 className="mt-3 font-display text-2xl font-bold">Keranjang</h1>
+
+      {items.length === 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center">
+          <ShoppingCart className="mx-auto h-8 w-8 text-neutral-300" />
+          <p className="mt-2 text-sm text-neutral-500">Keranjangmu masih kosong.</p>
+          <Link href="/marketplace" className="mt-3 inline-block text-sm font-semibold text-secondary-700 underline">
+            Mulai belanja
+          </Link>
+        </div>
+      )}
+
+      <div className="mt-4 space-y-4">
+        {Array.from(grup.entries()).map(([tokoId, g]) => (
+          <section key={tokoId} className="rounded-2xl border border-neutral-200 bg-white">
+            <div className="border-b border-neutral-100 px-4 py-2.5 text-sm font-semibold">{g.nama}</div>
+            <div className="divide-y divide-neutral-100">
+              {g.rows.map(({ item, p }) => (
+                <div key={item.id} className="flex items-center gap-3 p-3.5">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
+                    {p.foto_url?.[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.foto_url[0]} alt={p.nama} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                        <Package className="h-6 w-6" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-neutral-900">{p.nama}</div>
+                    <div className="text-sm font-bold text-secondary-700">{rupiah(p.harga)}</div>
+                    {item.jumlah > p.stok && (
+                      <div className="text-xs font-medium text-red-600">Stok tersisa {p.stok}</div>
+                    )}
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <form action={updateJumlahKeranjang.bind(null, item.id, item.jumlah - 1)}>
+                        <button className={btn} aria-label="Kurangi">
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                      </form>
+                      <span className="w-6 text-center text-sm font-medium">{item.jumlah}</span>
+                      <form action={updateJumlahKeranjang.bind(null, item.id, item.jumlah + 1)}>
+                        <button className={btn} disabled={item.jumlah >= p.stok} aria-label="Tambah">
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <form action={hapusDariKeranjang.bind(null, item.id)}>
+                    <button className="p-2 text-neutral-400 hover:text-red-600" aria-label="Hapus">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {hilang.map((item) => (
+          <div
+            key={item.id}
+            className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-neutral-50 p-3.5 text-sm text-neutral-500"
+          >
+            <span>Produk ini sudah tidak tersedia</span>
+            <form action={hapusDariKeranjang.bind(null, item.id)}>
+              <button className="font-medium text-red-600">Hapus</button>
+            </form>
+          </div>
+        ))}
+      </div>
+
+      {grup.size > 0 && (
+        <div className="mt-5 rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-neutral-600">Total</span>
+            <span className="text-xl font-bold">{rupiah(total)}</span>
+          </div>
+          <Link
+            href="/marketplace/checkout"
+            className="mt-3 block rounded-2xl bg-ink-900 py-3.5 text-center text-sm font-semibold text-white hover:opacity-90"
+          >
+            Lanjut ke checkout
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+===== app\app\marketplace\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { Package, Receipt, Search, ShoppingCart } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { rupiah } from '@/lib/admin/data';
+
+type Produk = {
+  id: string;
+  nama: string;
+  harga: number | string;
+  stok: number;
+  foto_url: string[] | null;
+  toko_id: string;
+};
+
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategori?: string; q?: string }>;
+}) {
+  const { kategori, q: cari = '' } = await searchParams;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  let query = supabase
+    .from('produk')
+    .select('id, nama, harga, stok, foto_url, toko_id')
+    .eq('status', 'aktif')
+    .order('created_at', { ascending: false })
+    .limit(60);
+  if (kategori) query = query.eq('kategori_id', kategori);
+  if (cari) query = query.ilike('nama', `%${cari}%`);
+
+  const [{ data: kategoriList }, { data: produkData, error }, { count: jumlahKeranjang }] = await Promise.all([
+    supabase.from('kategori').select('id, nama').eq('tipe', 'produk').order('urutan'),
+    query,
+    supabase.from('keranjang_item').select('*', { count: 'exact', head: true }).eq('pembeli_id', user.id),
+  ]);
+
+  const produk = (produkData ?? []) as Produk[];
+  const tokoIds = Array.from(new Set(produk.map((p) => p.toko_id)));
+  const { data: tokoData } = tokoIds.length
+    ? await supabase.from('toko').select('id, nama_toko').in('id', tokoIds)
+    : { data: [] as { id: string; nama_toko: string }[] };
+  const namaToko = new Map(((tokoData ?? []) as { id: string; nama_toko: string }[]).map((t) => [t.id, t.nama_toko]));
+
+  const chip = (aktif: boolean) =>
+    `shrink-0 rounded-full px-3.5 py-1.5 text-sm ${
+      aktif ? 'bg-ink-900 text-white' : 'border border-neutral-200 bg-white text-neutral-700'
+    }`;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 pt-6">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Belanja</h1>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/marketplace/pesanan"
+            aria-label="Pesanan saya"
+            className="rounded-full border border-neutral-200 bg-white p-2.5 hover:bg-neutral-50"
+          >
+            <Receipt className="h-5 w-5" />
+          </Link>
+          <Link
+            href="/marketplace/keranjang"
+            aria-label="Keranjang"
+            className="relative rounded-full border border-neutral-200 bg-white p-2.5 hover:bg-neutral-50"
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {(jumlahKeranjang ?? 0) > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
+                {jumlahKeranjang}
+              </span>
+            )}
+          </Link>
+        </div>
+      </div>
+
+      <form action="/marketplace" className="relative mt-4">
+        {kategori && <input type="hidden" name="kategori" value={kategori} />}
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <input
+          name="q"
+          defaultValue={cari}
+          placeholder="Cari produk dari tetangga..."
+          className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-sm outline-none focus:border-neutral-400"
+        />
+      </form>
+
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+        <Link href="/marketplace" className={chip(!kategori)}>
+          Semua
+        </Link>
+        {((kategoriList ?? []) as { id: string; nama: string }[]).map((k) => (
+          <Link key={k.id} href={`/marketplace?kategori=${k.id}`} className={chip(kategori === k.id)}>
+            {k.nama}
+          </Link>
+        ))}
+      </div>
+
+      {error && (
+        <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Gagal memuat produk: {error.message}
+        </div>
+      )}
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {produk.map((p) => {
+          const foto = p.foto_url?.[0];
+          return (
+            <Link
+              key={p.id}
+              href={`/marketplace/produk/${p.id}`}
+              className="overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md"
+            >
+              <div className="relative aspect-square bg-neutral-100">
+                {foto ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={foto} alt={p.nama} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                    <Package className="h-10 w-10" />
+                  </div>
+                )}
+                {p.stok < 1 && (
+                  <span className="absolute left-2 top-2 rounded-full bg-neutral-900/80 px-2 py-0.5 text-[11px] font-medium text-white">
+                    Stok habis
+                  </span>
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="line-clamp-2 text-sm font-medium text-neutral-900">{p.nama}</h3>
+                <p className="mt-1 text-sm font-bold text-secondary-700">{rupiah(p.harga)}</p>
+                <p className="mt-0.5 truncate text-xs text-neutral-500">{namaToko.get(p.toko_id) ?? ''}</p>
+              </div>
+            </Link>
+          );
+        })}
+
+        {produk.length === 0 && !error && (
+          <div className="col-span-full rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">
+            {cari ? `Tidak ada produk untuk "${cari}".` : 'Belum ada produk.'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+===== app\app\marketplace\pesanan\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { bayarPesanan, batalkanPesanan, konfirmasiTerima } from '@/lib/actions/marketplace';
+import { ajukanKomplain } from '@/lib/actions/komplain';
+import { rupiah, waktuRelatif } from '@/lib/admin/data';
+import ChatButton from '@/app/app/chat/_components/chat-button';
+
+export const dynamic = 'force-dynamic';
+
+type Pesanan = {
+  id: string;
+  toko_id: string;
+  status: string;
+  subtotal: number | string;
+  alamat_pengiriman: string | null;
+  created_at: string;
+  updated_at: string;
+};
+type PItem = { id: string; pesanan_id: string; produk_id: string | null; nama_produk: string; jumlah: number };
+type Toko = { id: string; nama_toko: string; penjual_id: string };
+type Komplain = { pesanan_id: string; status: string; alasan: string; putusan_catatan: string | null };
+
+const STATUS: Record<string, { teks: string; cls: string }> = {
+  menunggu_pembayaran: { teks: 'Menunggu pembayaran', cls: 'bg-amber-100 text-amber-800' },
+  dibayar: { teks: 'Dibayar, menunggu penjual', cls: 'bg-blue-100 text-blue-800' },
+  diproses: { teks: 'Diproses penjual', cls: 'bg-blue-100 text-blue-800' },
+  dikirim: { teks: 'Dikirim', cls: 'bg-purple-100 text-purple-800' },
+  diterima: { teks: 'Diterima', cls: 'bg-green-100 text-green-800' },
+  selesai: { teks: 'Selesai', cls: 'bg-green-100 text-green-800' },
+  dibatalkan: { teks: 'Dibatalkan', cls: 'bg-neutral-200 text-neutral-600' },
+};
+
+const HARI_AUTO = 3;
+
+export default async function PesananPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { ok, error: errMsg } = await searchParams;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: pData, error } = await supabase
+    .from('pesanan')
+    .select('id, toko_id, status, subtotal, alamat_pengiriman, created_at, updated_at')
+    .eq('pembeli_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  const pesanan = (pData ?? []) as Pesanan[];
+
+  const ids = pesanan.map((p) => p.id);
+  const tokoIds = Array.from(new Set(pesanan.map((p) => p.toko_id)));
+  const [{ data: iData }, { data: tData }, { data: kData }] = await Promise.all([
+    ids.length
+      ? supabase.from('pesanan_item').select('id, pesanan_id, produk_id, nama_produk, jumlah').in('pesanan_id', ids)
+      : Promise.resolve({ data: [] as PItem[] }),
+    tokoIds.length
+      ? supabase.from('toko').select('id, nama_toko, penjual_id').in('id', tokoIds)
+      : Promise.resolve({ data: [] as Toko[] }),
+    ids.length
+      ? supabase.from('komplain').select('pesanan_id, status, alasan, putusan_catatan').in('pesanan_id', ids)
+      : Promise.resolve({ data: [] as Komplain[] }),
+  ]);
+  const items = (iData ?? []) as PItem[];
+  const tokoMap = new Map(((tData ?? []) as Toko[]).map((t) => [t.id, t]));
+  const komplainMap = new Map(((kData ?? []) as Komplain[]).map((k) => [k.pesanan_id, k]));
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-6 pt-6">
+      <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Belanja
+      </Link>
+      <h1 className="mt-3 font-display text-2xl font-bold">Pesanan saya</h1>
+
+      {ok && (
+        <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
+          {ok}
+        </div>
+      )}
+      {(errMsg || error) && (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          {errMsg ?? error?.message}
+        </div>
+      )}
+
+      <div className="mt-4 space-y-3">
+        {pesanan.length === 0 && !error && (
+          <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">
+            Belum ada pesanan.
+          </div>
+        )}
+
+        {pesanan.map((p) => {
+          const st = STATUS[p.status] ?? { teks: p.status, cls: 'bg-neutral-100 text-neutral-700' };
+          const barang = items.filter((i) => i.pesanan_id === p.id);
+          const toko = tokoMap.get(p.toko_id);
+          const kmp = komplainMap.get(p.id);
+          const komplainTerbuka = kmp?.status === 'terbuka';
+
+          const hariLewat = Math.floor((Date.now() - new Date(p.updated_at).getTime()) / 86400000);
+          const sisaHari = Math.max(0, HARI_AUTO - hariLewat);
+
+          return (
+            <div key={p.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">{toko?.nama_toko ?? 'Toko'}</h2>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${st.cls}`}>{st.teks}</span>
+              </div>
+
+              <div className="mt-2 space-y-1">
+                {barang.map((i) => (
+                  <div key={i.id} className="flex justify-between gap-3 text-sm text-neutral-600">
+                    <span className="min-w-0 truncate">
+                      {i.produk_id && p.status === 'selesai' ? (
+                        <Link href={`/marketplace/produk/${i.produk_id}`} className="hover:underline">
+                          {i.nama_produk}
+                        </Link>
+                      ) : (
+                        i.nama_produk
+                      )}{' '}
+                      x {i.jumlah}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {p.alamat_pengiriman && (
+                <p className="mt-2 line-clamp-2 text-xs text-neutral-500">Dikirim ke: {p.alamat_pengiriman}</p>
+              )}
+
+              {/* Status komplain */}
+              {kmp && komplainTerbuka && (
+                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                  <div className="font-semibold">Komplain diajukan, menunggu keputusan admin</div>
+                  <p className="mt-1 whitespace-pre-wrap">{kmp.alasan}</p>
+                  <p className="mt-1">Dana tetap ditahan. Kalau masalahnya sudah beres, kamu bisa menekan tombol diterima.</p>
+                </div>
+              )}
+              {kmp && kmp.status === 'refund' && (
+                <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-xs text-green-900">
+                  <div className="font-semibold">Komplain disetujui, dana dikembalikan ke saldomu</div>
+                  {kmp.putusan_catatan && <p className="mt-1">Catatan admin: {kmp.putusan_catatan}</p>}
+                </div>
+              )}
+              {kmp && kmp.status === 'dicairkan' && (
+                <div className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700">
+                  <div className="font-semibold">Komplain ditolak, dana diteruskan ke penjual</div>
+                  {kmp.putusan_catatan && <p className="mt-1">Catatan admin: {kmp.putusan_catatan}</p>}
+                </div>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3">
+                <div>
+                  <div className="font-bold">{rupiah(p.subtotal)}</div>
+                  <div className="text-xs text-neutral-400">{waktuRelatif(p.created_at)}</div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {toko && p.status !== 'menunggu_pembayaran' && p.status !== 'dibatalkan' && (
+                    <ChatButton
+                      lawanId={toko.penjual_id}
+                      label={`Pesanan ${toko.nama_toko}`}
+                      href="/marketplace/pesanan"
+                      teks="Chat penjual"
+                      kecil
+                    />
+                  )}
+                  {p.status === 'menunggu_pembayaran' && (
+                    <>
+                      <form action={batalkanPesanan.bind(null, p.id)}>
+                        <button className="rounded-full border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
+                          Batalkan
+                        </button>
+                      </form>
+                      <form action={bayarPesanan.bind(null, p.id)}>
+                        <button className="rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+                          Bayar (simulasi)
+                        </button>
+                      </form>
+                    </>
+                  )}
+                  {p.status === 'dikirim' && (
+                    <form action={konfirmasiTerima.bind(null, p.id)}>
+                      <button className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                        Barang sudah diterima
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+
+              {p.status === 'dikirim' && !komplainTerbuka && (
+                <>
+                  <p className="mt-2 text-xs text-neutral-500">
+                    {sisaHari > 0
+                      ? `Otomatis dianggap diterima sekitar ${sisaHari} hari lagi jika tidak ada komplain.`
+                      : 'Segera dianggap diterima otomatis jika tidak ada komplain.'}
+                  </p>
+                  <details className="mt-2 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                    <summary className="cursor-pointer text-sm font-medium text-neutral-700">
+                      Ada masalah dengan pesanan?
+                    </summary>
+                    <form action={ajukanKomplain.bind(null, p.id)} className="mt-3 space-y-2">
+                      <textarea
+                        name="alasan"
+                        required
+                        minLength={10}
+                        maxLength={1000}
+                        rows={3}
+                        placeholder="Jelaskan masalahnya (barang rusak, tidak sesuai, dll)"
+                        className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none"
+                      />
+                      <button className="rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                        Ajukan komplain
+                      </button>
+                      <p className="text-xs text-neutral-500">
+                        Dana tetap ditahan dan admin yang memutuskan: dikembalikan kepadamu atau diteruskan ke penjual.
+                      </p>
+                    </form>
+                  </details>
+                </>
+              )}
+
+              {p.status === 'selesai' && !kmp && (
+                <p className="mt-2 text-xs text-neutral-500">Ketuk nama produk untuk memberi ulasan.</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+===== app\app\marketplace\produk\[id]\page.tsx =====
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { ChevronLeft, Package, ShoppingCart, Star, Store } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { tambahKeKeranjang, kirimUlasan } from '@/lib/actions/marketplace';
+import { rupiah, waktuRelatif } from '@/lib/admin/data';
+import ChatButton from '@/app/app/chat/_components/chat-button';
+
+
+type Produk = {
+  id: string;
+  toko_id: string;
+  kategori_id: string | null;
+  nama: string;
+  deskripsi: string | null;
+  harga: number | string;
+  stok: number;
+  foto_url: string[] | null;
+};
+
+type Ulasan = { id: string; rating: number; komentar: string | null; created_at: string; nama: string };
+
+function Bintang({ n }: { n: number }) {
+  return (
+    <span className="inline-flex">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`h-4 w-4 ${i <= Math.round(n) ? 'fill-amber-400 text-amber-400' : 'text-neutral-300'}`}
+        />
+      ))}
+    </span>
+  );
+}
+
+export default async function ProdukDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { id } = await params;
+  const { ok, error: errMsg } = await searchParams;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: pd } = await supabase
+    .from('produk')
+    .select('id, toko_id, kategori_id, nama, deskripsi, harga, stok, foto_url')
+    .eq('id', id)
+    .maybeSingle();
+  if (!pd) notFound();
+  const produk = pd as Produk;
+
+  const [{ data: toko }, { data: kat }, { data: ulasanData }, { data: sudahUlas }, { data: selesai }] =
+    await Promise.all([
+      supabase.from('toko').select('id, nama_toko, penjual_id').eq('id', produk.toko_id).maybeSingle(),
+      produk.kategori_id
+        ? supabase.from('kategori').select('nama').eq('id', produk.kategori_id).maybeSingle()
+        : Promise.resolve({ data: null as { nama: string } | null }),
+      supabase.rpc('rpc_ulasan_produk', { p_produk_id: id }),
+      supabase.from('ulasan_produk').select('id').eq('produk_id', id).eq('pembeli_id', user.id).maybeSingle(),
+      supabase.from('pesanan').select('id').eq('pembeli_id', user.id).eq('status', 'selesai'),
+    ]);
+
+  const tk = toko as { id: string; nama_toko: string; penjual_id: string } | null;
+  const ulasan = (ulasanData ?? []) as Ulasan[];
+  const rata = ulasan.length ? ulasan.reduce((s, u) => s + u.rating, 0) / ulasan.length : 0;
+  const tokoSendiri = tk?.penjual_id === user.id;
+
+  // Boleh memberi ulasan kalau pernah membeli produk ini dan pesanannya selesai
+  const pesananSelesaiIds = ((selesai ?? []) as { id: string }[]).map((p) => p.id);
+  const { data: pernahBeli } = pesananSelesaiIds.length
+    ? await supabase.from('pesanan_item').select('id').eq('produk_id', id).in('pesanan_id', pesananSelesaiIds).limit(1)
+    : { data: [] as { id: string }[] };
+  const bolehUlas = (pernahBeli ?? []).length > 0 && !sudahUlas;
+
+  const fotos = produk.foto_url ?? [];
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-6 pt-6">
+      <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Belanja
+      </Link>
+
+      {ok && (
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
+          <span>{ok}</span>
+          {ok.includes('keranjang') && (
+            <Link href="/marketplace/keranjang" className="shrink-0 font-semibold underline">
+              Lihat keranjang
+            </Link>
+          )}
+        </div>
+      )}
+      {errMsg && (
+        <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          {errMsg}
+        </div>
+      )}
+
+      <div className="mt-3 overflow-hidden rounded-2xl bg-neutral-100">
+        {fotos[0] ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={fotos[0]} alt={produk.nama} className="aspect-square w-full object-cover" />
+        ) : (
+          <div className="flex aspect-square w-full items-center justify-center text-neutral-300">
+            <Package className="h-16 w-16" />
+          </div>
+        )}
+      </div>
+      {fotos.length > 1 && (
+        <div className="mt-2 flex gap-2 overflow-x-auto">
+          {fotos.slice(1).map((f) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={f} src={f} alt="" className="h-16 w-16 shrink-0 rounded-xl object-cover" />
+          ))}
+        </div>
+      )}
+
+      <h1 className="mt-4 font-display text-2xl font-bold leading-tight">{produk.nama}</h1>
+      <div className="mt-1 text-2xl font-bold text-secondary-700">{rupiah(produk.harga)}</div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
+        {ulasan.length > 0 && (
+          <span className="inline-flex items-center gap-1.5">
+            <Bintang n={rata} /> {rata.toFixed(1)} ({ulasan.length})
+          </span>
+        )}
+        {kat?.nama && <span>{kat.nama}</span>}
+        <span>Stok {produk.stok}</span>
+      </div>
+
+      {tk && (
+        <Link
+          href={`/marketplace/toko/${tk.id}`}
+          className="mt-4 flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-3 hover:bg-neutral-50"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
+            <Store className="h-5 w-5" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-sm font-semibold text-neutral-900">{tk.nama_toko}</span>
+            <span className="block text-xs text-neutral-500">Lihat toko</span>
+          </span>
+        </Link>
+      )}
+
+      {tk && !tokoSendiri && (
+        <div className="mt-3">
+          <ChatButton
+            lawanId={tk.penjual_id}
+            label={produk.nama}
+            href={`/marketplace/produk/${id}`}
+            teks="Chat penjual"
+          />
+        </div>
+      )}
+
+      {produk.deskripsi && <p className="mt-4 whitespace-pre-wrap text-neutral-700">{produk.deskripsi}</p>}
+
+      <div className="mt-5">
+        {tokoSendiri ? (
+          <div className="rounded-2xl bg-neutral-100 p-4 text-sm text-neutral-600">Ini produk dari tokomu sendiri.</div>
+        ) : produk.stok > 0 ? (
+          <form action={tambahKeKeranjang.bind(null, id)} className="flex gap-2">
+            <input
+              type="number"
+              name="jumlah"
+              defaultValue={1}
+              min={1}
+              max={produk.stok}
+              className="w-20 rounded-2xl border border-neutral-200 bg-white px-3 py-3 text-center text-sm outline-none focus:border-neutral-400"
+            />
+            <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-ink-900 py-3 text-sm font-semibold text-white hover:opacity-90">
+              <ShoppingCart className="h-4 w-4" /> Tambah ke keranjang
+            </button>
+          </form>
+        ) : (
+          <div className="rounded-2xl bg-red-50 p-4 text-center text-sm font-medium text-red-700">Stok habis</div>
+        )}
+      </div>
+
+      {/* Ulasan */}
+      <section className="mt-8">
+        <h2 className="font-semibold">Ulasan ({ulasan.length})</h2>
+
+        {bolehUlas && (
+          <form action={kirimUlasan.bind(null, id)} className="mt-3 space-y-3 rounded-2xl border border-neutral-200 bg-white p-4">
+            <div className="text-sm font-medium">Bagaimana produk ini?</div>
+            <select
+              name="rating"
+              defaultValue="5"
+              className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm"
+            >
+              <option value="5">★★★★★ Sangat baik</option>
+              <option value="4">★★★★ Baik</option>
+              <option value="3">★★★ Cukup</option>
+              <option value="2">★★ Kurang</option>
+              <option value="1">★ Buruk</option>
+            </select>
+            <textarea
+              name="komentar"
+              rows={3}
+              maxLength={500}
+              placeholder="Tulis ulasan (opsional)"
+              className="w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-neutral-400"
+            />
+            <button className="rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90">
+              Kirim ulasan
+            </button>
+          </form>
+        )}
+
+        <div className="mt-3 space-y-2">
+          {ulasan.length === 0 && <p className="text-sm text-neutral-500">Belum ada ulasan.</p>}
+          {ulasan.map((u) => (
+            <div key={u.id} className="rounded-2xl border border-neutral-200 bg-white p-3.5 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-neutral-900">{u.nama}</span>
+                <span className="text-xs text-neutral-400">{waktuRelatif(u.created_at)}</span>
+              </div>
+              <div className="mt-1">
+                <Bintang n={u.rating} />
+              </div>
+              {u.komentar && <p className="mt-1.5 text-neutral-600">{u.komentar}</p>}
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+===== app\app\marketplace\toko\[id]\page.tsx =====
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { ChevronLeft, MapPin, Package, Store } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { rupiah } from '@/lib/admin/data';
+
+type Produk = { id: string; nama: string; harga: number | string; stok: number; foto_url: string[] | null };
+
+export default async function TokoDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: tk } = await supabase
+    .from('toko')
+    .select('id, nama_toko, deskripsi, kecamatan_id')
+    .eq('id', id)
+    .maybeSingle();
+  if (!tk) notFound();
+  const toko = tk as { id: string; nama_toko: string; deskripsi: string | null; kecamatan_id: string | null };
+
+  const [{ data: kec }, { data: pData }] = await Promise.all([
+    toko.kecamatan_id
+      ? supabase.from('kecamatan').select('nama').eq('id', toko.kecamatan_id).maybeSingle()
+      : Promise.resolve({ data: null as { nama: string } | null }),
+    supabase
+      .from('produk')
+      .select('id, nama, harga, stok, foto_url')
+      .eq('toko_id', id)
+      .eq('status', 'aktif')
+      .order('created_at', { ascending: false }),
+  ]);
+  const produk = (pData ?? []) as Produk[];
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 pb-6 pt-6">
+      <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Belanja
+      </Link>
+
+      <div className="mt-3 flex items-start gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
+          <Store className="h-6 w-6" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold">{toko.nama_toko}</h1>
+          {kec?.nama && (
+            <p className="mt-0.5 flex items-center gap-1 text-sm text-neutral-500">
+              <MapPin className="h-3.5 w-3.5" /> Kec. {kec.nama}
+            </p>
+          )}
+          {toko.deskripsi && <p className="mt-2 text-sm text-neutral-600">{toko.deskripsi}</p>}
+        </div>
+      </div>
+
+      <h2 className="mb-2 mt-6 font-semibold">Produk ({produk.length})</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {produk.map((p) => (
+          <Link
+            key={p.id}
+            href={`/marketplace/produk/${p.id}`}
+            className="overflow-hidden rounded-2xl border border-neutral-200 bg-white transition hover:shadow-md"
+          >
+            <div className="relative aspect-square bg-neutral-100">
+              {p.foto_url?.[0] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.foto_url[0]} alt={p.nama} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-neutral-300">
+                  <Package className="h-10 w-10" />
+                </div>
+              )}
+              {p.stok < 1 && (
+                <span className="absolute left-2 top-2 rounded-full bg-neutral-900/80 px-2 py-0.5 text-[11px] font-medium text-white">
+                  Stok habis
+                </span>
+              )}
+            </div>
+            <div className="p-3">
+              <h3 className="line-clamp-2 text-sm font-medium text-neutral-900">{p.nama}</h3>
+              <p className="mt-1 text-sm font-bold text-secondary-700">{rupiah(p.harga)}</p>
+            </div>
+          </Link>
+        ))}
+        {produk.length === 0 && (
+          <div className="col-span-full rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">
+            Toko ini belum punya produk.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+===== app\app\toko-saya\produk\[id]\page.tsx =====
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { ubahProduk } from '@/lib/actions/produk';
+import ProdukForm from '../produk-form';
+
+export const dynamic = 'force-dynamic';
+
+export default async function EditProdukPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+
+  const supabase = await createClient();
+  const { data: toko } = await supabase.from('toko').select('id').eq('penjual_id', user.id).maybeSingle();
+  if (!toko) redirect('/toko-saya');
+
+  const { data: p } = await supabase
+    .from('produk')
+    .select('id, nama, deskripsi, kategori_id, harga, stok, status, foto_url')
+    .eq('id', id)
+    .eq('toko_id', toko.id)
+    .maybeSingle();
+  if (!p) notFound();
+
+  const { data: kategori } = await supabase
+    .from('kategori')
+    .select('id, nama')
+    .eq('tipe', 'produk')
+    .order('urutan');
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-8 pt-6">
+      <Link href="/toko-saya/produk" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Produk saya
+      </Link>
+      <h1 className="mb-5 mt-3 font-display text-2xl font-bold">Edit produk</h1>
+
+      <ProdukForm
+        userId={user.id}
+        kategori={(kategori ?? []) as { id: string; nama: string }[]}
+        action={ubahProduk.bind(null, p.id)}
+        tombol="Simpan perubahan"
+        awal={{
+          nama: p.nama ?? '',
+          deskripsi: p.deskripsi ?? '',
+          kategori_id: p.kategori_id ?? '',
+          harga: Number(p.harga),
+          stok: Number(p.stok ?? 0),
+          status: p.status ?? 'aktif',
+          foto: (p.foto_url ?? []) as string[],
+        }}
+      />
+    </div>
+  );
+}
+
+===== app\app\toko-saya\produk\baru\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { buatProduk } from '@/lib/actions/produk';
+import ProdukForm from '../produk-form';
+
+export const dynamic = 'force-dynamic';
+
+export default async function ProdukBaruPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+
+  const supabase = await createClient();
+  const { data: toko } = await supabase
+    .from('toko')
+    .select('id, status_verifikasi')
+    .eq('penjual_id', user.id)
+    .maybeSingle();
+  if (!toko) redirect('/toko-saya');
+
+  const { data: kategori } = await supabase
+    .from('kategori')
+    .select('id, nama')
+    .eq('tipe', 'produk')
+    .order('urutan');
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-8 pt-6">
+      <Link href="/toko-saya/produk" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Produk saya
+      </Link>
+      <h1 className="mb-5 mt-3 font-display text-2xl font-bold">Produk baru</h1>
+
+      {toko.status_verifikasi !== 'terverifikasi' ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Toko kamu belum terverifikasi admin, jadi belum bisa menambah produk.
+        </div>
+      ) : (
+        <ProdukForm
+          userId={user.id}
+          kategori={(kategori ?? []) as { id: string; nama: string }[]}
+          action={buatProduk}
+          tombol="Simpan produk"
+        />
+      )}
+    </div>
+  );
+}
+
+===== app\app\toko-saya\produk\hapus-button.tsx =====
+'use client';
+
+export default function HapusButton({ nama }: { nama: string }) {
+  return (
+    <button
+      type="submit"
+      onClick={(e) => {
+        const ya = window.confirm(
+          `Hapus produk "${nama}"? Kalau sudah pernah dipesan, produk hanya disembunyikan.`
+        );
+        if (!ya) e.preventDefault();
+      }}
+      className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+    >
+      Hapus
+    </button>
+  );
+}
+
+===== app\app\toko-saya\produk\page.tsx =====
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { ChevronLeft, Package, Plus } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { hapusProduk, ubahStatusProduk } from '@/lib/actions/produk';
+import HapusButton from './hapus-button';
+
+export const dynamic = 'force-dynamic';
+
+type Produk = {
+  id: string;
+  nama: string;
+  harga: number | string;
+  stok: number | null;
+  status: string;
+  foto_url: string[] | null;
+};
+
+export default async function ProdukSayaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; error?: string }>;
+}) {
+  const { ok, error: errMsg } = await searchParams;
+
+  const user = await getCurrentUser();
+  if (!user) redirect('/login');
+
+  const supabase = await createClient();
+  const { data: toko } = await supabase
+    .from('toko')
+    .select('id, status_verifikasi')
+    .eq('penjual_id', user.id)
+    .maybeSingle();
+  if (!toko) redirect('/toko-saya');
+
+  const { data } = await supabase
+    .from('produk')
+    .select('id, nama, harga, stok, status, foto_url')
+    .eq('toko_id', toko.id)
+    .order('created_at', { ascending: false });
+  const produkList = (data ?? []) as Produk[];
+  const aktif = toko.status_verifikasi === 'terverifikasi';
+
+  return (
+    <div className="mx-auto max-w-xl px-4 pb-8 pt-6">
+      <Link href="/toko-saya" className="inline-flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900">
+        <ChevronLeft className="h-4 w-4" /> Toko saya
+      </Link>
+
+      <div className="mt-3 flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Produk saya</h1>
+        {aktif && (
+          <Link
+            href="/toko-saya/produk/baru"
+            className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary-600"
+          >
+            <Plus className="h-4 w-4" /> Produk baru
+          </Link>
+        )}
+      </div>
+
+      {ok && (
+        <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
+          {ok}
+        </div>
+      )}
+      {errMsg && (
+        <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+          {errMsg}
+        </div>
+      )}
+
+      <div className="mt-4 space-y-3">
+        {produkList.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center text-sm text-neutral-500">
+            Belum ada produk.
+          </div>
+        )}
+
+        {produkList.map((p) => {
+          const foto = p.foto_url?.[0];
+          const tampil = p.status === 'aktif';
+          return (
+            <div key={p.id} className="rounded-2xl border border-neutral-200 bg-white p-3">
+              <div className="flex gap-3">
+                <Link
+                  href={`/toko-saya/produk/${p.id}`}
+                  className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100"
+                >
+                  {foto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={foto} alt={p.nama} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-neutral-300">
+                      <Package className="h-6 w-6" />
+                    </div>
+                  )}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/toko-saya/produk/${p.id}`} className="line-clamp-2 text-sm font-semibold text-neutral-900">
+                    {p.nama}
+                  </Link>
+                  <p className="mt-0.5 text-sm font-semibold text-primary-700">
+                    Rp {Number(p.harga).toLocaleString('id-ID')}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    Stok {p.stok ?? 0} -{' '}
+                    <span className={tampil ? 'text-green-700' : 'text-neutral-400'}>
+                      {tampil ? 'Tampil' : 'Disembunyikan'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3">
+                <Link
+                  href={`/toko-saya/produk/${p.id}`}
+                  className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                >
+                  Edit
+                </Link>
+                <form action={ubahStatusProduk.bind(null, p.id, tampil ? 'nonaktif' : 'aktif')}>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                  >
+                    {tampil ? 'Sembunyikan' : 'Tampilkan'}
+                  </button>
+                </form>
+                <form action={hapusProduk.bind(null, p.id)} className="ml-auto">
+                  <HapusButton nama={p.nama} />
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+===== app\app\toko-saya\produk\produk-form.tsx =====
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ImagePlus, Loader2, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+
+const BUCKET = 'produk-foto';
+const MAKS_FOTO = 4;
+const MAKS_BYTE = 3 * 1024 * 1024;
+const TIPE_OK = ['image/jpeg', 'image/png', 'image/webp'];
+
+type HasilForm = { error: string } | { ke: string };
+
+type Props = {
+  userId: string;
+  kategori: { id: string; nama: string }[];
+  action: (fd: FormData) => Promise<HasilForm>;
+  tombol: string;
+  awal?: {
+    nama: string;
+    deskripsi: string;
+    kategori_id: string;
+    harga: number;
+    stok: number;
+    status: string;
+    foto: string[];
+  };
+};
+
+type FotoBaru = { id: string; file: File; preview: string };
+
+// Kecilkan foto HP (sisi terpanjang 1280px, JPEG) supaya upload cepat dan hemat kuota
+async function kecilkan(file: File): Promise<File> {
+  try {
+    const bmp = await createImageBitmap(file);
+    const skala = Math.min(1, 1280 / Math.max(bmp.width, bmp.height));
+    const w = Math.round(bmp.width * skala);
+    const h = Math.round(bmp.height * skala);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close();
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/jpeg', 0.82));
+    if (!blob || (skala === 1 && blob.size >= file.size)) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch {
+    return file;
+  }
+}
+
+const inputCls =
+  'w-full rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20';
+
+export default function ProdukForm({ userId, kategori, action, tombol, awal }: Props) {
+  const router = useRouter();
+  const [lama, setLama] = useState<string[]>(awal?.foto ?? []);
+  const [baru, setBaru] = useState<FotoBaru[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const [sibuk, setSibuk] = useState(false);
+
+  async function pilih(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    setErr(null);
+
+    const sisa = MAKS_FOTO - lama.length - baru.length;
+    if (sisa <= 0) {
+      setErr(`Maksimal ${MAKS_FOTO} foto.`);
+      return;
+    }
+
+    const hasil: FotoBaru[] = [];
+    for (const f of files.slice(0, sisa)) {
+      if (!TIPE_OK.includes(f.type)) {
+        setErr('Format foto harus JPG, PNG, atau WebP.');
+        continue;
+      }
+      const kecil = await kecilkan(f);
+      if (kecil.size > MAKS_BYTE) {
+        setErr('Ada foto yang terlalu besar (maksimal 3 MB).');
+        continue;
+      }
+      hasil.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+        file: kecil,
+        preview: URL.createObjectURL(kecil),
+      });
+    }
+    setBaru((prev) => [...prev, ...hasil]);
+  }
+
+  function hapusBaru(id: string) {
+    setBaru((prev) => {
+      const target = prev.find((b) => b.id === id);
+      if (target) URL.revokeObjectURL(target.preview);
+      return prev.filter((b) => b.id !== id);
+    });
+  }
+
+  async function kirim(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (sibuk) return;
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    fd.delete('foto_url');
+
+    setErr(null);
+    setSibuk(true);
+
+    const supabase = createClient();
+    const terupload: string[] = [];
+    const urls: string[] = [...lama];
+
+    try {
+      for (const b of baru) {
+        const ext = b.file.type === 'image/png' ? 'png' : b.file.type === 'image/webp' ? 'webp' : 'jpg';
+        const jalur = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage.from(BUCKET).upload(jalur, b.file, {
+          contentType: b.file.type,
+          cacheControl: '31536000',
+        });
+        if (error) throw new Error('Upload foto gagal: ' + error.message);
+        terupload.push(jalur);
+        urls.push(supabase.storage.from(BUCKET).getPublicUrl(jalur).data.publicUrl);
+      }
+
+      urls.forEach((u) => fd.append('foto_url', u));
+      const res = await action(fd);
+
+      if ('error' in res) {
+        if (terupload.length > 0) await supabase.storage.from(BUCKET).remove(terupload);
+        setErr(res.error);
+        setSibuk(false);
+        return;
+      }
+      router.push(res.ke);
+      router.refresh();
+    } catch (ex) {
+      if (terupload.length > 0) await supabase.storage.from(BUCKET).remove(terupload);
+      setErr(ex instanceof Error ? ex.message : 'Terjadi kesalahan. Coba lagi.');
+      setSibuk(false);
+    }
+  }
+
+  const totalFoto = lama.length + baru.length;
+
+  return (
+    <form onSubmit={kirim} className="space-y-5">
+      {err && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">{err}</div>
+      )}
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-neutral-800">
+          Foto produk <span className="font-normal text-neutral-400">({totalFoto}/{MAKS_FOTO})</span>
+        </label>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {lama.map((u, i) => (
+            <div key={u} className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt="" className="h-full w-full object-cover" />
+              {i === 0 && (
+                <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                  Utama
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setLama((prev) => prev.filter((x) => x !== u))}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                aria-label="Hapus foto"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+          {baru.map((b, i) => (
+            <div key={b.id} className="relative aspect-square overflow-hidden rounded-xl bg-neutral-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={b.preview} alt="" className="h-full w-full object-cover" />
+              {lama.length + i === 0 && (
+                <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white">
+                  Utama
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => hapusBaru(b.id)}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                aria-label="Hapus foto"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+          {totalFoto < MAKS_FOTO && (
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-neutral-300 bg-white text-neutral-500 hover:border-primary-400 hover:text-primary-600">
+              <ImagePlus className="h-6 w-6" />
+              <span className="text-xs">Tambah</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={pilih}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+        <p className="mt-1.5 text-xs text-neutral-500">
+          Foto pertama jadi foto utama. Format JPG, PNG, atau WebP. Ukuran otomatis dikecilkan.
+        </p>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-neutral-800">Nama produk</label>
+        <input name="nama" required minLength={3} maxLength={120} defaultValue={awal?.nama ?? ''} className={inputCls} />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-neutral-800">Deskripsi</label>
+        <textarea
+          name="deskripsi"
+          rows={4}
+          maxLength={2000}
+          defaultValue={awal?.deskripsi ?? ''}
+          className={inputCls}
+        />
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-neutral-800">Kategori</label>
+        <select name="kategori_id" defaultValue={awal?.kategori_id ?? ''} className={inputCls}>
+          <option value="">Tanpa kategori</option>
+          {kategori.map((k) => (
+            <option key={k.id} value={k.id}>
+              {k.nama}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-neutral-800">Harga (Rp)</label>
+          <input
+            type="number"
+            name="harga"
+            required
+            min={1}
+            step={1}
+            inputMode="numeric"
+            defaultValue={awal?.harga ?? ''}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-neutral-800">Stok</label>
+          <input
+            type="number"
+            name="stok"
+            required
+            min={0}
+            step={1}
+            inputMode="numeric"
+            defaultValue={awal?.stok ?? ''}
+            className={inputCls}
+          />
+        </div>
+      </div>
+
+      {awal && (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-neutral-800">Status</label>
+          <select name="status" defaultValue={awal.status === 'nonaktif' ? 'nonaktif' : 'aktif'} className={inputCls}>
+            <option value="aktif">Tampil di marketplace</option>
+            <option value="nonaktif">Disembunyikan</option>
+          </select>
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={sibuk}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary-500 px-4 py-3 text-sm font-semibold text-white hover:bg-primary-600 disabled:opacity-60"
+      >
+        {sibuk && <Loader2 className="h-4 w-4 animate-spin" />}
+        {sibuk ? 'Menyimpan...' : tombol}
+      </button>
+    </form>
+  );
+}
+
+===== lib\actions\kerja.ts =====
+'use server';
+
+import { z } from 'zod';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
+
+const postingSchema = z.object({
+  judul: z.string().min(5, 'Judul minimal 5 karakter').max(100, 'Judul maksimal 100 karakter'),
+  deskripsi: z.string().min(20, 'Deskripsi minimal 20 karakter').max(2000, 'Deskripsi maksimal 2000 karakter'),
+  kategoriId: z.string().min(1, 'Pilih kategori pekerjaan'),
+  kecamatanId: z.string().min(1, 'Pilih kecamatan'),
+  upah: z.coerce.number({ invalid_type_error: 'Upah harus berupa angka' }).positive('Upah harus lebih dari 0'),
+});
+
+export type PostingKerjaResult =
+  | { success: true; taskId: string }
+  | { success: false; error: string };
+
+export async function postingKerja(formData: FormData): Promise<PostingKerjaResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Kamu harus login dulu untuk posting kerja.' };
+
+  const parsed = postingSchema.safeParse({
+    judul: formData.get('judul'),
+    deskripsi: formData.get('deskripsi'),
+    kategoriId: formData.get('kategoriId'),
+    kecamatanId: formData.get('kecamatanId'),
+    upah: formData.get('upah'),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Data belum lengkap/valid.' };
+  }
+
+  const { data: task, error } = await supabase
+    .from('tasks')
+    .insert({
+      judul: parsed.data.judul,
+      deskripsi: parsed.data.deskripsi,
+      kategori_id: parsed.data.kategoriId,
+      kecamatan_id: parsed.data.kecamatanId,
+      upah: parsed.data.upah,
+      status: 'terbuka',
+      pemberi_kerja_id: user.id,
+    })
+    .select('id')
+    .single();
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/kerja');
+  return { success: true, taskId: task.id as string };
+}
+
+function kembali(taskId: string, kv: Record<string, string>): never {
+  redirect(`/kerja/${taskId}?${new URLSearchParams(kv).toString()}`);
+}
+
+export async function lamarKerja(taskId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { error } = await supabase.from('lamaran_kerja').insert({
+    task_id: taskId,
+    pencari_kerja_id: user.id,
+    status: 'menunggu',
+  });
+  if (error) {
+    kembali(taskId, {
+      error: error.code === '42501' ? 'Kamu tidak bisa melamar pekerjaan ini' : error.message,
+    });
+  }
+
+  revalidatePath(`/kerja/${taskId}`);
+  kembali(taskId, { ok: 'Lamaran terkirim. Tunggu konfirmasi pemberi kerja' });
+}
+
+export async function terimaLamaran(lamaranId: string, taskId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('rpc_terima_lamaran', { p_lamaran_id: lamaranId });
+  if (error) kembali(taskId, { error: error.message });
+
+  revalidatePath(`/kerja/${taskId}`);
+  kembali(taskId, { ok: 'Pekerja dipilih. Lanjutkan dengan membayar dan menahan dana' });
+}
+
+export async function bayarTask(taskId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('rpc_bayar_task', { p_task_id: taskId });
+  if (error) kembali(taskId, { error: error.message });
+
+  revalidatePath(`/kerja/${taskId}`);
+  kembali(taskId, { ok: 'Dana ditahan. Pekerja bisa mulai bekerja' });
+}
+
+export async function selesaikanTask(taskId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('rpc_selesaikan_task', { p_task_id: taskId });
+  if (error) kembali(taskId, { error: error.message });
+
+  revalidatePath('/', 'layout');
+  kembali(taskId, { ok: 'Pekerjaan selesai. Dana sudah dicairkan ke saldo pekerja' });
+}
+
+===== lib\actions\produk.ts =====
+'use server';
+
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+
+const BUCKET = 'produk-foto';
+const MAKS_FOTO = 4;
+
+type HasilForm = { error: string } | { ke: string };
+
+type DataProduk = {
+  nama: string;
+  deskripsi: string | null;
+  kategori_id: string | null;
+  harga: number;
+  stok: number;
+  foto_url: string[];
+};
+
+async function konteks() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: toko } = await supabase
+    .from('toko')
+    .select('id, status_verifikasi')
+    .eq('penjual_id', user.id)
+    .maybeSingle();
+  return {
+    supabase,
+    user,
+    toko: toko as { id: string; status_verifikasi: string } | null,
+  };
+}
+
+function jalurDariUrl(url: string): string | null {
+  const penanda = `/object/public/${BUCKET}/`;
+  const i = url.indexOf(penanda);
+  if (i === -1) return null;
+  return decodeURIComponent(url.slice(i + penanda.length));
+}
+
+function bacaForm(fd: FormData, userId: string): { data: DataProduk } | { error: string } {
+  const nama = String(fd.get('nama') ?? '').trim();
+  const deskripsi = String(fd.get('deskripsi') ?? '').trim();
+  const kategoriId = String(fd.get('kategori_id') ?? '').trim();
+  const harga = Number(fd.get('harga'));
+  const stok = Number(fd.get('stok'));
+  const foto = fd
+    .getAll('foto_url')
+    .map((v) => String(v))
+    .filter((v) => v.length > 0);
+
+  if (nama.length < 3 || nama.length > 120) return { error: 'Nama produk 3 sampai 120 karakter.' };
+  if (deskripsi.length > 2000) return { error: 'Deskripsi maksimal 2000 karakter.' };
+  if (!Number.isInteger(harga) || harga <= 0 || harga > 100000000) {
+    return { error: 'Harga harus angka bulat lebih dari 0.' };
+  }
+  if (!Number.isInteger(stok) || stok < 0 || stok > 100000) {
+    return { error: 'Stok harus angka bulat 0 atau lebih.' };
+  }
+  if (foto.length > MAKS_FOTO) return { error: `Maksimal ${MAKS_FOTO} foto.` };
+
+  const awalan = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${userId}/`;
+  if (foto.some((u) => !u.startsWith(awalan))) return { error: 'Foto tidak valid. Coba upload ulang.' };
+
+  return {
+    data: {
+      nama,
+      deskripsi: deskripsi || null,
+      kategori_id: kategoriId || null,
+      harga,
+      stok,
+      foto_url: foto,
+    },
+  };
+}
+
+export async function buatProduk(fd: FormData): Promise<HasilForm> {
+  const k = await konteks();
+  if (!k) redirect('/login');
+  if (!k.toko) return { error: 'Buat toko dulu di halaman Toko saya.' };
+  if (k.toko.status_verifikasi !== 'terverifikasi') {
+    return { error: 'Toko kamu belum terverifikasi admin, jadi belum bisa menambah produk.' };
+  }
+
+  const h = bacaForm(fd, k.user.id);
+  if ('error' in h) return { error: h.error };
+
+  const { error } = await k.supabase
+    .from('produk')
+    .insert({ toko_id: k.toko.id, ...h.data, status: 'aktif' });
+  if (error) return { error: 'Gagal menyimpan produk: ' + error.message };
+
+  return { ke: '/toko-saya/produk?ok=' + encodeURIComponent('Produk berhasil ditambahkan.') };
+}
+
+export async function ubahProduk(id: string, fd: FormData): Promise<HasilForm> {
+  const k = await konteks();
+  if (!k) redirect('/login');
+  if (!k.toko) return { error: 'Toko tidak ditemukan.' };
+
+  const { data: lama } = await k.supabase
+    .from('produk')
+    .select('id, foto_url')
+    .eq('id', id)
+    .eq('toko_id', k.toko.id)
+    .maybeSingle();
+  if (!lama) return { error: 'Produk tidak ditemukan.' };
+
+  const h = bacaForm(fd, k.user.id);
+  if ('error' in h) return { error: h.error };
+
+  const status = String(fd.get('status') ?? 'aktif') === 'nonaktif' ? 'nonaktif' : 'aktif';
+
+  const { error } = await k.supabase
+    .from('produk')
+    .update({ ...h.data, status })
+    .eq('id', id)
+    .eq('toko_id', k.toko.id);
+  if (error) return { error: 'Gagal menyimpan perubahan: ' + error.message };
+
+  // Hapus file foto yang dibuang dari storage (best effort)
+  const fotoLama = ((lama.foto_url ?? []) as string[]).filter((u) => !h.data.foto_url.includes(u));
+  const dibuang = fotoLama
+    .map(jalurDariUrl)
+    .filter((p): p is string => !!p && p.startsWith(k.user.id + '/'));
+  if (dibuang.length > 0) await k.supabase.storage.from(BUCKET).remove(dibuang);
+
+  return { ke: '/toko-saya/produk?ok=' + encodeURIComponent('Perubahan disimpan.') };
+}
+
+export async function ubahStatusProduk(id: string, status: 'aktif' | 'nonaktif'): Promise<void> {
+  const k = await konteks();
+  if (!k) redirect('/login');
+  if (!k.toko) redirect('/toko-saya');
+
+  const { error } = await k.supabase
+    .from('produk')
+    .update({ status })
+    .eq('id', id)
+    .eq('toko_id', k.toko.id);
+  if (error) redirect('/toko-saya/produk?error=' + encodeURIComponent('Gagal mengubah status: ' + error.message));
+
+  redirect(
+    '/toko-saya/produk?ok=' +
+      encodeURIComponent(status === 'aktif' ? 'Produk ditampilkan lagi.' : 'Produk disembunyikan dari marketplace.')
+  );
+}
+
+export async function hapusProduk(id: string): Promise<void> {
+  const k = await konteks();
+  if (!k) redirect('/login');
+  if (!k.toko) redirect('/toko-saya');
+
+  const { data: p } = await k.supabase
+    .from('produk')
+    .select('id, foto_url')
+    .eq('id', id)
+    .eq('toko_id', k.toko.id)
+    .maybeSingle();
+  if (!p) redirect('/toko-saya/produk?error=' + encodeURIComponent('Produk tidak ditemukan.'));
+
+  const { error } = await k.supabase.from('produk').delete().eq('id', id).eq('toko_id', k.toko.id);
+
+  if (error) {
+    // 23503 = masih dipakai pesanan/keranjang, jadi cukup disembunyikan
+    if (error.code === '23503') {
+      await k.supabase.from('produk').update({ status: 'nonaktif' }).eq('id', id).eq('toko_id', k.toko.id);
+      redirect(
+        '/toko-saya/produk?ok=' +
+          encodeURIComponent('Produk sudah pernah dipesan, jadi tidak dihapus permanen. Produk disembunyikan saja.')
+      );
+    }
+    redirect('/toko-saya/produk?error=' + encodeURIComponent('Gagal menghapus: ' + error.message));
+  }
+
+  const jalur = ((p.foto_url ?? []) as string[])
+    .map(jalurDariUrl)
+    .filter((x): x is string => !!x && x.startsWith(k.user.id + '/'));
+  if (jalur.length > 0) await k.supabase.storage.from(BUCKET).remove(jalur);
+
+  redirect('/toko-saya/produk?ok=' + encodeURIComponent('Produk dihapus.'));
+}
+
+===== lib\actions\toko.ts =====
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+export async function buatToko(
+  formData: FormData
+): Promise<{ success: true } | { success: false; error: string }> {
+  console.log('[buatToko] dipanggil');
+
+  try {
+    const current = await getCurrentUser();
+    if (!current) return { success: false, error: 'Sesi habis, silakan login ulang' };
+
+    const nama = (formData.get('nama') as string)?.trim();
+    const deskripsi = (formData.get('deskripsi') as string)?.trim() || null;
+    const kecamatanId = formData.get('kecamatan_id') as string;
+
+    if (!nama || !kecamatanId) {
+      return { success: false, error: 'Nama toko dan kecamatan wajib diisi' };
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.from('toko').insert({
+      penjual_id: current.id,
+      nama_toko: nama,
+      deskripsi,
+      kecamatan_id: kecamatanId,
+      status_verifikasi: 'menunggu',
+    });
+
+    if (error) {
+      console.error('[buatToko] insert gagal:', error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath('/toko-saya');
+    return { success: true };
+  } catch (e) {
+    console.error('[buatToko] exception:', e);
+    return { success: false, error: e instanceof Error ? e.message : 'Terjadi kesalahan di server' };
+  }
+}
+
+export async function buatProduk(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current) return;
+
+  const supabase = await createClient();
+  const { data: toko } = await supabase.from('toko').select('id').eq('penjual_id', current.id).single();
+  if (!toko) return;
+
+  const nama = (formData.get('nama') as string)?.trim();
+  const deskripsi = (formData.get('deskripsi') as string)?.trim();
+  const harga = Number(formData.get('harga'));
+  const stok = Number(formData.get('stok'));
+  const kategoriId = formData.get('kategori_id') as string;
+  if (!nama || !harga) return;
+
+  await supabase.from('produk').insert({
+    toko_id: toko.id,
+    nama,
+    deskripsi,
+    harga,
+    stok,
+    kategori_id: kategoriId || null,
+    status: 'aktif',
+  });
+
+  redirect('/toko-saya/produk');
+}
+
+export async function hapusProduk(produkId: string) {
+  const supabase = await createClient();
+  await supabase.from('produk').delete().eq('id', produkId);
+  revalidatePath('/toko-saya/produk');
+}
+
+export async function updateStatusPesanan(pesananId: string, statusBaru: string) {
+  const supabase = await createClient();
+  await supabase.from('pesanan').update({ status: statusBaru }).eq('id', pesananId);
+  revalidatePath('/toko-saya/pesanan-masuk');
+}
+
+===== lib\publik.ts =====
+import { cache } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+export type Relasi<T> = T | T[] | null;
+
+export type Lowongan = {
+  id: string;
+  judul: string;
+  upah: number | null;
+  created_at: string | null;
+  kategori: Relasi<{ nama: string }>;
+  kecamatan: Relasi<{ nama: string }>;
+};
+export type LowonganDetail = Lowongan & { deskripsi: string | null; status: string };
+
+export type Produk = {
+  id: string;
+  nama: string;
+  harga: number | null;
+  stok: number | null;
+  foto_url: string | string[] | null;
+  toko: Relasi<{ nama_toko: string }>;
+};
+export type ProdukDetail = Produk & { deskripsi: string | null; status: string };
+
+export type Opsi = { id: string; nama: string };
+
+export function satu<T>(v: Relasi<T>): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
+
+export function rupiah(n: number | null) {
+  return `Rp${Math.round(n ?? 0).toLocaleString('id-ID')}`;
+}
+
+export function waktuRelatif(iso: string | null) {
+  if (!iso) return '';
+  const menit = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (menit < 1) return 'baru saja';
+  if (menit < 60) return `${menit} mnt lalu`;
+  const jam = Math.floor(menit / 60);
+  if (jam < 24) return `${jam} jam lalu`;
+  const hari = Math.floor(jam / 24);
+  if (hari < 7) return `${hari} hari lalu`;
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+export function fotoList(v: string | string[] | null): string[] {
+  const arr = Array.isArray(v) ? v : v ? [v] : [];
+  return arr.filter((f) => typeof f === 'string' && f.startsWith('http'));
+}
+
+function bersih(q: string) {
+  return q.replace(/[%_\\]/g, ' ').trim().slice(0, 60);
+}
+
+function anon() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+const LOWONGAN_SELECT = 'id, judul, upah, created_at, kategori(nama), kecamatan(nama)';
+const PRODUK_SELECT = 'id, nama, harga, stok, foto_url, toko(nama_toko)';
+
+export async function daftarLowongan(opsi: { q?: string; kec?: string }): Promise<Lowongan[]> {
+  const sb = anon();
+  if (!sb) return [];
+  try {
+    let qb = sb
+      .from('tasks')
+      .select(LOWONGAN_SELECT)
+      .eq('status', 'terbuka')
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (opsi.kec) qb = qb.eq('kecamatan_id', opsi.kec);
+    const q = bersih(opsi.q ?? '');
+    if (q) qb = qb.ilike('judul', `%${q}%`);
+    const { data, error } = await qb;
+    if (error) console.error('[publik] daftarLowongan:', error.message);
+    return (data ?? []) as unknown as Lowongan[];
+  } catch (e) {
+    console.error('[publik] daftarLowongan gagal:', e);
+    return [];
+  }
+}
+
+export async function daftarKecamatan(): Promise<Opsi[]> {
+  const sb = anon();
+  if (!sb) return [];
+  try {
+    const { data, error } = await sb.from('kecamatan').select('id, nama').order('nama');
+    if (error) console.error('[publik] daftarKecamatan:', error.message);
+    return (data ?? []) as Opsi[];
+  } catch (e) {
+    console.error('[publik] daftarKecamatan gagal:', e);
+    return [];
+  }
+}
+
+export const ambilLowongan = cache(async (id: string): Promise<LowonganDetail | null> => {
+  const sb = anon();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from('tasks')
+      .select('id, judul, deskripsi, upah, status, created_at, kategori(nama), kecamatan(nama)')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) console.error('[publik] ambilLowongan:', error.message);
+    const t = data as unknown as LowonganDetail | null;
+    return t && t.status === 'terbuka' ? t : null;
+  } catch (e) {
+    console.error('[publik] ambilLowongan gagal:', e);
+    return null;
+  }
+});
+
+export async function daftarProduk(opsi: { q?: string }): Promise<Produk[]> {
+  const sb = anon();
+  if (!sb) return [];
+  try {
+    let qb = sb
+      .from('produk')
+      .select(PRODUK_SELECT)
+      .eq('status', 'aktif')
+      .order('created_at', { ascending: false })
+      .limit(40);
+    const q = bersih(opsi.q ?? '');
+    if (q) qb = qb.ilike('nama', `%${q}%`);
+    const { data, error } = await qb;
+    if (error) console.error('[publik] daftarProduk:', error.message);
+    return (data ?? []) as unknown as Produk[];
+  } catch (e) {
+    console.error('[publik] daftarProduk gagal:', e);
+    return [];
+  }
+}
+
+export const ambilProduk = cache(async (id: string): Promise<ProdukDetail | null> => {
+  const sb = anon();
+  if (!sb) return null;
+  try {
+    const { data, error } = await sb
+      .from('produk')
+      .select('id, nama, deskripsi, harga, stok, foto_url, status, toko(nama_toko)')
+      .eq('id', id)
+      .maybeSingle();
+    if (error) console.error('[publik] ambilProduk:', error.message);
+    const p = data as unknown as ProdukDetail | null;
+    return p && p.status === 'aktif' ? p : null;
+  } catch (e) {
+    console.error('[publik] ambilProduk gagal:', e);
+    return null;
+  }
+});

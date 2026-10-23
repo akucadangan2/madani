@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Briefcase } from 'lucide-react';
-import { daftarKecamatan, daftarLowongan, rupiah, satu, waktuRelatif } from '@/lib/publik';
+import { daftarKecamatan, daftarLowongan, rupiah, satuanLabel, satu, waktuRelatif } from '@/lib/publik';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,7 +70,7 @@ export default async function LowonganPage({
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2">
-                    <span className="rounded-md bg-sun-400 px-2 py-0.5 text-sm font-bold text-ink-800">{rupiah(t.upah)}</span>
+                    <span className="rounded-md bg-sun-400 px-2 py-0.5 text-sm font-bold text-ink-800">{rupiah(t.upah)}{satuanLabel(t.satuan_upah)}</span>
                     <span className="text-xs text-neutral-500">{waktuRelatif(t.created_at)}</span>
                   </div>
                 </Link>

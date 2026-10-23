@@ -12,6 +12,7 @@ type Produk = {
   id: string;
   nama: string;
   harga: number | string;
+  satuan?: string | null;
   stok: number | null;
   status: string;
   foto_url: string[] | null;
@@ -37,7 +38,7 @@ export default async function ProdukSayaPage({
 
   const { data } = await supabase
     .from('produk')
-    .select('id, nama, harga, stok, status, foto_url')
+    .select('id, nama, harga, satuan, stok, status, foto_url')
     .eq('toko_id', toko.id)
     .order('created_at', { ascending: false });
   const produkList = (data ?? []) as Produk[];
@@ -103,7 +104,7 @@ export default async function ProdukSayaPage({
                     {p.nama}
                   </Link>
                   <p className="mt-0.5 text-sm font-semibold text-primary-700">
-                    Rp {Number(p.harga).toLocaleString('id-ID')}
+                    Rp {Number(p.harga).toLocaleString('id-ID')}{p.satuan && <span className="text-xs font-normal text-neutral-500"> / {p.satuan}</span>}
                   </p>
                   <p className="text-xs text-neutral-500">
                     Stok {p.stok ?? 0} -{' '}

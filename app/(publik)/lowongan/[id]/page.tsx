@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Briefcase, MapPin, Clock } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/current-user';
-import { ambilLowongan, rupiah, satu, waktuRelatif } from '@/lib/publik';
+import { ambilLowongan, rupiah, satuanLabel, satu, waktuRelatif } from '@/lib/publik';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +47,7 @@ export default async function LowonganDetailPage({ params }: Props) {
           <span className="inline-flex items-center gap-1.5"><Clock className="h-4 w-4" />{waktuRelatif(t.created_at)}</span>
         </div>
 
-        <p className="mt-5 inline-block rounded-md bg-sun-400 px-3 py-1 text-lg font-bold text-ink-800">{rupiah(t.upah)}</p>
+        <p className="mt-5 inline-block rounded-md bg-sun-400 px-3 py-1 text-lg font-bold text-ink-800">{rupiah(t.upah)}{satuanLabel(t.satuan_upah)}</p>
 
         <h2 className="mt-7 font-display text-lg font-bold text-ink-700">Deskripsi pekerjaan</h2>
         <p className="mt-2 whitespace-pre-line leading-relaxed text-neutral-700">

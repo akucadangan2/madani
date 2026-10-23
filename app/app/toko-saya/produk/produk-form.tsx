@@ -25,6 +25,7 @@ type Props = {
     stok: number;
     status: string;
     foto: string[];
+    satuan?: string;
   };
 };
 
@@ -272,6 +273,26 @@ export default function ProdukForm({ userId, kategori, action, tombol, awal }: P
             className={inputCls}
           />
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-neutral-800">
+          Satuan <span className="font-normal text-neutral-400">(opsional)</span>
+        </label>
+        <input
+          name="satuan"
+          list="satuan-produk"
+          maxLength={20}
+          defaultValue={awal?.satuan ?? ''}
+          placeholder="Contoh: kg, pcs, ikat, porsi"
+          className={inputCls}
+        />
+        <datalist id="satuan-produk">
+          {['kg', 'gram', 'liter', 'pcs', 'buah', 'pack', 'box', 'ikat', 'porsi', 'lusin', 'botol', 'bungkus', 'meter'].map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+        <p className="mt-1.5 text-xs text-neutral-500">Tampil di samping harga, misalnya Rp15.000 / kg.</p>
       </div>
 
       {awal && (

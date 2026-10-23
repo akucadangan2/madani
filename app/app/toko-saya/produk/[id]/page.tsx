@@ -20,7 +20,7 @@ export default async function EditProdukPage({ params }: { params: Promise<{ id:
 
   const { data: p } = await supabase
     .from('produk')
-    .select('id, nama, deskripsi, kategori_id, harga, stok, status, foto_url')
+    .select('id, nama, deskripsi, kategori_id, harga, satuan, stok, status, foto_url')
     .eq('id', id)
     .eq('toko_id', toko.id)
     .maybeSingle();
@@ -50,6 +50,7 @@ export default async function EditProdukPage({ params }: { params: Promise<{ id:
           kategori_id: p.kategori_id ?? '',
           harga: Number(p.harga),
           stok: Number(p.stok ?? 0),
+          satuan: p.satuan ?? '',
           status: p.status ?? 'aktif',
           foto: (p.foto_url ?? []) as string[],
         }}

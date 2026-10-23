@@ -17,6 +17,7 @@ type Task = {
   judul: string;
   deskripsi: string | null;
   upah: number | string;
+  satuan_upah: string | null;
   status: string;
   worker_terpilih_id: string | null;
   created_at: string;
@@ -153,7 +154,7 @@ export default async function KerjaDetailPage({
         <span>{waktuRelatif(task.created_at)}</span>
       </div>
 
-      <div className="mt-4 text-3xl font-bold text-secondary-700">{rupiah(task.upah)}</div>
+      <div className="mt-4 text-3xl font-bold text-secondary-700">{rupiah(task.upah)}{task.satuan_upah && <span className="ml-1.5 text-base font-medium text-neutral-500">per {task.satuan_upah}</span>}</div>
 
       {ok && (
         <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">

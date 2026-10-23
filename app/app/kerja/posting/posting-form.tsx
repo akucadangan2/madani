@@ -15,8 +15,16 @@ type Opsi = { id: string | number; nama: string };
 const TIPS = [
   'Tulis judul yang spesifik, misalnya "Bantu Angkut Barang Gudang" bukan cuma "Butuh Pekerja".',
   'Jelaskan jam kerja, lokasi persis, dan syarat yang dibutuhkan di deskripsi.',
-  'Pasang upah yang wajar sesuai beban kerja — ini yang paling dilihat pencari kerja.',
+  'Pasang upah yang wajar sesuai beban kerja, ini yang paling dilihat pencari kerja.',
   'Dana upah ditahan sistem (escrow) dan baru cair setelah kamu tandai pekerjaan selesai.',
+];
+
+const SATUAN_UPAH = [
+  { v: 'hari', l: 'Per hari' },
+  { v: 'minggu', l: 'Per minggu' },
+  { v: 'bulan', l: 'Per bulan' },
+  { v: 'pertemuan', l: 'Per pertemuan' },
+  { v: 'paket', l: 'Per paket' },
 ];
 
 function formatRibuan(digitsOnly: string) {
@@ -38,6 +46,7 @@ export function PostingForm({
   const [kecamatanId, setKecamatanId] = useState('');
   const [kecamatanNama, setKecamatanNama] = useState('');
   const [upahDigits, setUpahDigits] = useState('');
+  const [satuanUpah, setSatuanUpah] = useState('hari');
   const [error, setError] = useState<string | null>(null);
 
   const kategoriTerpilih = kategoriList.find((k) => String(k.id) === kategoriId);
@@ -70,6 +79,7 @@ export function PostingForm({
     formData.set('kategoriId', kategoriId);
     formData.set('kecamatanId', kecamatanId);
     formData.set('upah', upahDigits);
+    formData.set('satuanUpah', satuanUpah);
 
     startTransition(async () => {
       const result = await postingKerja(formData);
@@ -209,6 +219,18 @@ export function PostingForm({
                   className="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2.5 pl-10 pr-3.5 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-primary-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
               </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {SATUAN_UPAH.map((s) => (
+                  <button
+                    key={s.v}
+                    type="button"
+                    onClick={() => setSatuanUpah(s.v)}
+                    className={'rounded-full border px-3.5 py-1.5 text-sm font-medium transition ' + (satuanUpah === s.v ? 'border-primary-500 bg-primary-500 text-white' : 'border-neutral-200 bg-white text-neutral-600 hover:border-primary-300')}
+                  >
+                    {s.l}
+                  </button>
+                ))}
+              </div>
               <p className="mt-1.5 text-xs text-neutral-400">
                 Dana ditahan sistem (escrow) dan baru dicairkan setelah kamu tandai pekerjaan selesai.
               </p>
@@ -258,6 +280,7 @@ export function PostingForm({
                   <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-3.5">
                     <span className="text-base font-bold text-primary-700">
                       {upahDigits ? `Rp ${formatRibuan(upahDigits)}` : 'Rp 0'}
+                      <span className="text-xs font-normal text-neutral-500">{' '}per {satuanUpah}</span>
                     </span>
                     <span className="text-sm font-medium text-neutral-400">Detail →</span>
                   </div>
