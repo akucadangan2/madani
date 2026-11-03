@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import TombolPlayStore, { PLAY_STORE_URL } from '@/components/tombol-play-store';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { createClient } from '@supabase/supabase-js';
@@ -462,7 +463,8 @@ export default async function HomePage() {
             ))}
           </nav>
           <div className="flex items-center gap-1">
-            <Link href="/login" className="rounded-full px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-neutral-100 sm:px-4 sm:text-[15px]">
+            <TombolPlayStore ukuran="kecil" />
+<Link href="/login" className="rounded-full px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-neutral-100 sm:px-4 sm:text-[15px]">
               Masuk
             </Link>
             <Link href="/register" className="rounded-full bg-ink-700 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800 sm:px-5 sm:text-[15px]">
@@ -508,6 +510,7 @@ export default async function HomePage() {
               Saya sudah punya akun
             </Link>
           </div>
+<TombolPlayStore className="mt-4" />
           <p
             className="desa-naik mt-5 flex items-center gap-2 text-sm text-neutral-500"
             style={{ '--d': '360ms' } as React.CSSProperties}
@@ -927,7 +930,8 @@ export default async function HomePage() {
             <ul className="mt-3 space-y-2">
               <li><Link href="/lowongan" className="hover:text-white">Lowongan kerja</Link></li>
               <li><Link href="/produk" className="hover:text-white">Produk</Link></li>
-              <li><Link href="/register" className="hover:text-white">Daftar gratis</Link></li>
+              <li><a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Unduh di Google Play</a></li>
+<li><Link href="/register" className="hover:text-white">Daftar gratis</Link></li>
               <li><Link href="/login" className="hover:text-white">Masuk</Link></li>
             </ul>
           </div>
