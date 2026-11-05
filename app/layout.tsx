@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, Figtree } from 'next/font/google';
 import './globals.css';
 import SiteFooter from '@/components/site-footer';
+import LoadingNavigasi from '@/components/loading-navigasi';
 
 const display = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <SiteFooter />
+        <LoadingNavigasi />
       </body>
     </html>
   );

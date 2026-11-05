@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import TombolPlayStore, { PLAY_STORE_URL } from '@/components/tombol-play-store';
+import TombolPlayStore from '@/components/tombol-play-store';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { createClient } from '@supabase/supabase-js';
@@ -907,48 +907,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-ink-800 py-10 text-sm text-white/70">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:px-5 md:grid-cols-[1.4fr_1fr_1fr]">
-          <div>
-            <p className="font-display text-lg font-bold text-white">MADANI</p>
-            <p className="mt-2 max-w-xs">
-              Marketplace kecamatan untuk pekerjaan dan barang. Dikembangkan oleh Sharee Management Group.
-            </p>
-            <p className="mt-3">
-              Email:{' '}
-              <a href="mailto:info@rhgteknologiindonesia.id" className="underline hover:text-white">
-                info@rhgteknologiindonesia.id
-              </a>
-            </p>
-            <p className="mt-3 max-w-xs">
-              Alamat: Jl. Kasnariansyah No 1500 Palembang Sumatera Selatan 30128
-            </p>
-          </div>
-          <div>
-            <p className="font-semibold text-white">Jelajahi</p>
-            <ul className="mt-3 space-y-2">
-              <li><Link href="/lowongan" className="hover:text-white">Lowongan kerja</Link></li>
-              <li><Link href="/produk" className="hover:text-white">Produk</Link></li>
-              <li><a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white">Unduh di Google Play</a></li>
-<li><Link href="/register" className="hover:text-white">Daftar gratis</Link></li>
-              <li><Link href="/login" className="hover:text-white">Masuk</Link></li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold text-white">Informasi</p>
-            <ul className="mt-3 space-y-2">
-              <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
-              <li><Link href="/syarat" className="hover:text-white">Syarat dan Ketentuan</Link></li>
-              <li><Link href="/refund" className="hover:text-white">Kebijakan Refund</Link></li>
-              <li><Link href="/privasi" className="hover:text-white">Kebijakan Privasi</Link></li>
-              <li><Link href="/kontak" className="hover:text-white">Hubungi kami</Link></li>
-              <li><Link href="/hapus-akun" className="hover:text-white">Hapus akun</Link></li>
-            </ul>
-          </div>
-        </div>
-        <p className="mx-auto mt-8 max-w-6xl px-4 text-xs text-white/40 sm:px-5">© MADANI. Seluruh hak dilindungi.</p>
-      </footer>
     </div>
   );
 }
