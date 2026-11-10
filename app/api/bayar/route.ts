@@ -7,20 +7,32 @@ export const dynamic = 'force-dynamic';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.madaniberdaya.com';
 
+const MIN_TOPUP = 10000;
+const MAKS_TOPUP = 5000000;
+
 type Baris = { ref: string; jumlah: number | string };
 
 export async function POST(req: Request) {
   const token = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return NextResponse.json({ error: 'Belum login' }, { status: 401 });
 
-  let isi: { jenis?: string; id?: string } = {};
+  let isi: { jenis?: string; id?: string; jumlah?: number | string } = {};
   try {
     isi = (await req.json()) as typeof isi;
   } catch {
     /* body kosong */
   }
   const { jenis, id } = isi;
-  if ((jenis !== 'pesanan' && jenis !== 'task') || !id || !/^[0-9a-f-]{36}$/i.test(id)) {
+  const nominal = Number(isi.jumlah);
+
+  if (jenis === 'topup') {
+    if (!Number.isInteger(nominal) || nominal < MIN_TOPUP || nominal > MAKS_TOPUP) {
+      return NextResponse.json(
+        { error: 'Nominal isi saldo minimal Rp 10.000 dan maksimal Rp 5.000.000' },
+        { status: 400 },
+      );
+    }
+  } else if ((jenis !== 'pesanan' && jenis !== 'task') || !id || !/^[0-9a-f-]{36}$/i.test(id)) {
     return NextResponse.json({ error: 'Permintaan tidak valid' }, { status: 400 });
   }
 
@@ -37,9 +49,11 @@ export async function POST(req: Request) {
   if (eu || !u.user) return NextResponse.json({ error: 'Sesi tidak valid, silakan masuk lagi' }, { status: 401 });
 
   const { data, error } =
-    jenis === 'pesanan'
-      ? await sb.rpc('rpc_mulai_bayar_pesanan', { p_pesanan_id: id })
-      : await sb.rpc('rpc_mulai_bayar_task', { p_task_id: id });
+    jenis === 'topup'
+      ? await sb.rpc('rpc_mulai_topup', { p_jumlah: nominal })
+      : jenis === 'pesanan'
+        ? await sb.rpc('rpc_mulai_bayar_pesanan', { p_pesanan_id: id as string })
+        : await sb.rpc('rpc_mulai_bayar_task', { p_task_id: id as string });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const baris = (Array.isArray(data) ? data[0] : data) as Baris | undefined;

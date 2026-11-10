@@ -45,17 +45,19 @@ export async function POST(req: Request) {
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
-  const { data, error } = await admin.rpc('rpc_doku_lunas', {
+  // Referensi berawalan TOP- adalah isi saldo; selain itu pesanan atau pekerjaan.
+  const fungsi = ref.startsWith('TOP-') ? 'rpc_topup_lunas' : 'rpc_doku_lunas';
+  const { data, error } = await admin.rpc(fungsi, {
     p_ref: ref,
     p_jumlah: Number.isFinite(n) ? n : null,
   });
   if (error) {
-    console.error('[doku] rpc_doku_lunas error', ref, error.message);
+    console.error('[doku]', fungsi, 'error', ref, error.message);
     return NextResponse.json({ error: 'Gagal memproses' }, { status: 500 }); // DOKU akan kirim ulang
   }
   if (data !== 'ok' && data !== 'sudah') {
-    console.error('[doku] PERLU DICEK MANUAL', ref, data); // uang masuk tapi pesanan tidak bisa ditandai
+    console.error('[doku] PERLU DICEK MANUAL', ref, data); // uang masuk tapi tidak bisa ditandai
   }
-  console.log('[doku] rpc_doku_lunas', ref, data);
+  console.log('[doku]', fungsi, ref, data);
   return NextResponse.json({ ok: true, hasil: data });
 }
