@@ -26,7 +26,7 @@ const LABEL_TARIK: Record<string, { teks: string; cls: string }> = {
   menunggu: { teks: 'Menunggu admin', cls: 'bg-amber-100 text-amber-800' },
   selesai: { teks: 'Berhasil dikirim', cls: 'bg-green-100 text-green-800' },
   ditolak: { teks: 'Ditolak', cls: 'bg-red-100 text-red-700' },
-  disetujui: { teks: 'Disetujui', cls: 'bg-green-100 text-green-800' },
+  disetujui: { teks: 'Diproses, dana masuk maks. 2 hari kerja', cls: 'bg-blue-100 text-blue-800' },
 };
 
 export default async function SaldoPage({

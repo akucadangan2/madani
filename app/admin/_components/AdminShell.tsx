@@ -8,8 +8,10 @@ import {
   AlertTriangle,
   Banknote,
   BarChart3,
+  BookOpen,
   Bell,
   ExternalLink,
+  Landmark,
   LayoutDashboard,
   MapPin,
   Menu,
@@ -44,8 +46,10 @@ const NAV: { judul: string; items: Item[] }[] = [
     items: [
       { href: '/admin/transaksi', label: 'Transaksi', icon: Receipt },
       { href: '/admin/pencairan-dana', label: 'Pencairan Dana', icon: Banknote, badge: 'penarikan' },
+      { href: '/admin/setoran-kecamatan', label: 'Setoran Kecamatan', icon: Landmark },
       { href: '/admin/komplain', label: 'Komplain', icon: AlertTriangle, badge: 'komplain' },
       { href: '/admin/laporan', label: 'Laporan', icon: BarChart3 },
+      { href: '/admin/panduan', label: 'Panduan Keuangan', icon: BookOpen },
     ],
   },
   {

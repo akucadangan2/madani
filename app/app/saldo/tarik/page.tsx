@@ -88,6 +88,10 @@ export default async function TarikPage({
         </div>
       )}
 
+      <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+        Setelah disetujui admin, dana ditransfer ke rekening kamu paling lama 2 hari kerja.
+      </div>
+
       {diproses > 0 ? (
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Kamu masih punya pengajuan sebesar {rupiah(diproses)} yang menunggu diproses admin. Tunggu sampai selesai
