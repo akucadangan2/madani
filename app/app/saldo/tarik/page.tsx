@@ -22,7 +22,7 @@ async function ajukan(formData: FormData): Promise<void> {
   if (!bank) gagal('Nama bank wajib diisi');
   if (!/^\d{5,30}$/.test(rekening)) gagal('Nomor rekening harus berupa angka');
   if (!atasNama) gagal('Nama pemilik rekening wajib diisi');
-  if (!Number.isFinite(jumlah) || jumlah < MIN_TARIK) gagal(`Minimal penarikan ${rupiah(MIN_TARIK)}`);
+  if (!Number.isFinite(jumlah) || jumlah <= 0) gagal("Isi jumlah penarikan");
 
   const supabase = await createClient();
   const {
@@ -32,6 +32,7 @@ async function ajukan(formData: FormData): Promise<void> {
 
   const { saldo, diproses } = await ambilSaldo(supabase, user.id);
   if (diproses > 0) gagal('Masih ada pengajuan penarikan yang menunggu diproses');
+  if (jumlah < MIN_TARIK && jumlah !== saldo) gagal(`Penarikan di bawah ${rupiah(MIN_TARIK)} hanya bisa untuk seluruh saldo (${rupiah(saldo)})`);
   if (jumlah > saldo) gagal(`Saldo tidak cukup. Saldo kamu ${rupiah(saldo)}`);
 
   const { error } = await supabase.from('penarikan_dana').insert({
@@ -105,7 +106,7 @@ export default async function TarikPage({
               name="jumlah"
               inputMode="numeric"
               required
-              placeholder={`Minimal ${MIN_TARIK.toLocaleString('id-ID')}`}
+              placeholder={`Minimal ${MIN_TARIK.toLocaleString('id-ID')}, atau seluruh saldo`}
               className={input}
             />
           </div>
