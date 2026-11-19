@@ -9,6 +9,7 @@ import {
   Banknote,
   BarChart3,
   BookOpen,
+  Briefcase,
   Bell,
   ExternalLink,
   Landmark,
@@ -56,6 +57,7 @@ const NAV: { judul: string; items: Item[] }[] = [
     judul: 'Data Master',
     items: [
       { href: '/admin/users', label: 'Pengguna', icon: Users },
+      { href: '/admin/pekerja', label: 'Pekerja', icon: Briefcase },
       { href: '/admin/admin-akun', label: 'Akun Admin', icon: UserCog },
       { href: '/admin/wilayah', label: 'Wilayah', icon: MapPin },
       { href: '/admin/kategori', label: 'Kategori', icon: Tags },
