@@ -178,7 +178,13 @@ export default async function AdminToko({
                 </div>
               </div>
 
-              <div className="flex shrink-0 gap-2">
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Link
+                  href={`/admin/toko/${t.id}`}
+                  className="inline-flex items-center rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50"
+                >
+                  Kelola
+                </Link>
                 {t.status_verifikasi !== TOKO.SETUJU && (
                   <ActionButton
                     action={ubahStatus}
