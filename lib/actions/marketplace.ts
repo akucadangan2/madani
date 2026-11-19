@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { mulaiBayarWeb } from '@/lib/bayar-web';
 
 function ke(path: string, kv: Record<string, string>): never {
   redirect(`${path}?${new URLSearchParams(kv).toString()}`);
@@ -78,12 +79,7 @@ export async function buatPesanan(formData: FormData): Promise<void> {
 }
 
 export async function bayarPesanan(pesananId: string): Promise<void> {
-  const { supabase } = await sesi();
-  const { error } = await supabase.rpc('rpc_bayar_pesanan', { p_pesanan_id: pesananId });
-  if (error) ke('/marketplace/pesanan', { error: error.message });
-
-  revalidatePath('/', 'layout');
-  ke('/marketplace/pesanan', { ok: 'Pembayaran diterima. Dana ditahan sampai pesanan kamu terima' });
+  await mulaiBayarWeb('pesanan', pesananId, '/marketplace/pesanan');
 }
 
 export async function batalkanPesanan(pesananId: string): Promise<void> {

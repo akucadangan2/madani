@@ -31,8 +31,7 @@ export default async function BayarSelesai({
       <Maskot pose="jempol" className="h-40 w-auto" />
       <h1 className="font-display mt-6 text-2xl font-extrabold text-ink-800">Terima kasih!</h1>
       <p className="mt-2 text-ink-700">
-        Pembayaranmu sedang kami proses, biasanya hanya beberapa detik. Kembali ke aplikasi MADANI,
-        lalu tarik layar ke bawah untuk menyegarkan status.
+        Pembayaranmu sedang kami proses, biasanya hanya beberapa detik. Status pesanan atau saldo berubah setelah pembayaran terkonfirmasi. Di aplikasi MADANI, tarik layar ke bawah untuk menyegarkan.
       </p>
       <Link
         href="/"

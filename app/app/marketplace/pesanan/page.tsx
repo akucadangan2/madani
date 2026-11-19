@@ -181,7 +181,7 @@ export default async function PesananPage({
                       </form>
                       <form action={bayarPesanan.bind(null, p.id)}>
                         <button className="rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
-                          Bayar (simulasi)
+                          Bayar sekarang
                         </button>
                       </form>
                     </>

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { mulaiBayarWeb } from '@/lib/bayar-web';
 
 const postingSchema = z.object({
   judul: z.string().min(5, 'Judul minimal 5 karakter').max(100, 'Judul maksimal 100 karakter'),
@@ -91,12 +92,7 @@ export async function terimaLamaran(lamaranId: string, taskId: string): Promise<
 }
 
 export async function bayarTask(taskId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc('rpc_bayar_task', { p_task_id: taskId });
-  if (error) kembali(taskId, { error: error.message });
-
-  revalidatePath(`/kerja/${taskId}`);
-  kembali(taskId, { ok: 'Dana ditahan. Pekerja bisa mulai bekerja' });
+  await mulaiBayarWeb('task', taskId, `/kerja/${taskId}`);
 }
 
 export async function selesaikanTask(taskId: string): Promise<void> {
