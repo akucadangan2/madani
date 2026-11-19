@@ -2,16 +2,23 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   ArrowLeft, Search, MapPin, Plus, ChevronRight, ChevronDown, Users, FileText,
+  Star, BadgeCheck, Clock,
   Home, Sprout, PawPrint, Hammer, Truck, HeartHandshake, Store, PartyPopper, Laptop, Wrench,
   TreePine, GraduationCap, ShieldCheck, Umbrella, Sparkles, MoreHorizontal,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import ChatButton from '@/app/app/chat/_components/chat-button';
+import KontakButton from './kontak-button';
 
 export const dynamic = 'force-dynamic';
 
-type SP = { q?: string; k?: string; kec?: string; ready?: string };
+type SP = { q?: string; k?: string; kec?: string; ready?: string; error?: string };
+type DetailSkill = {
+  skill: string;
+  tahun: number | null;
+  tarif: number | null;
+  satuan: string | null;
+};
 type Pekerja = {
   id: string;
   full_name: string | null;
@@ -22,6 +29,11 @@ type Pekerja = {
   tarif: number | string | null;
   satuan_tarif: string | null;
   jumlah_dokumen: number | null;
+  rating_rata: number | string | null;
+  rating_n: number | null;
+  ktp_terverifikasi: boolean | null;
+  detail_skill: DetailSkill[] | null;
+  sudah_kontak: boolean | null;
 };
 
 function pilihIkon(nama: string): LucideIcon {
@@ -78,6 +90,12 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
     supabase.rpc('app_cari_pekerja', { p_q: q || null, p_kecamatan: sp.kec || null, p_online: sp.ready === '1' }),
   ]);
   const semua = (data ?? []) as Pekerja[];
+  const { data: biayaRow } = await supabase
+    .from('pengaturan_biaya')
+    .select('nilai')
+    .eq('kunci', 'biaya_kontak_pekerja')
+    .maybeSingle();
+  const biaya = Number(biayaRow?.nilai ?? 0);
 
   // Kategori mengikuti tabel kategori yang diatur admin. Keahlian pekerja dicocokkan ke sub kategorinya;
   // keahlian yang tidak cocok masuk ke "Lainnya".
@@ -108,6 +126,21 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
       .map((c) => ({ id: c.id, nama: c.nama, n: hitung.get(c.id) ?? 0 })),
     { id: LAINNYA, nama: 'Lainnya', n: hitung.get(LAINNYA) ?? 0 },
   ].filter((c) => c.n > 0);
+
+  // Rincian keahlian yang paling relevan: yang dicari, lalu yang ada di kategori terpilih, lalu yang pertama
+  const detailUntuk = (p: Pekerja): DetailSkill | null => {
+    const d = p.detail_skill ?? [];
+    if (q) {
+      const kt = q.toLowerCase();
+      const c = d.find((x) => x.skill.toLowerCase().includes(kt));
+      if (c) return c;
+    }
+    if (k) {
+      const c = d.find((x) => (subKeKategori.get(x.skill.trim().toLowerCase()) ?? LAINNYA) === k);
+      if (c) return c;
+    }
+    return d[0] ?? null;
+  };
 
   const modeDaftar = q !== '' || k !== '';
   const daftar = q
@@ -182,6 +215,9 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
       </header>
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
+        {sp.error && (
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{sp.error}</div>
+        )}
         {!modeDaftar ? (
           kategori.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-16 text-center">
@@ -278,6 +314,37 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                           )}
                         </div>
                       </div>
+                      {(() => {
+                        const dt = detailUntuk(p);
+                        const adaRating = Number(p.rating_n ?? 0) > 0;
+                        if (!dt && !adaRating && !p.ktp_terverifikasi) return null;
+                        return (
+                          <div className="mt-3 flex flex-wrap gap-1.5 text-xs font-semibold">
+                            {dt && dt.tahun != null && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 capitalize text-neutral-700">
+                                <Clock className="h-3 w-3" />
+                                {dt.skill}: {dt.tahun === 0 ? 'baru mulai' : dt.tahun + ' th pengalaman'}
+                              </span>
+                            )}
+                            {dt && Number(dt.tarif ?? 0) > 0 && (
+                              <span className="rounded-full bg-primary-50 px-2.5 py-1 capitalize text-primary-700">
+                                {dt.skill}: Rp {Number(dt.tarif).toLocaleString('id-ID')}
+                                {dt.satuan ? ' / ' + dt.satuan : ''}
+                              </span>
+                            )}
+                            {adaRating && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">
+                                <Star className="h-3 w-3" /> {p.rating_rata} ({p.rating_n})
+                              </span>
+                            )}
+                            {p.ktp_terverifikasi && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                                <BadgeCheck className="h-3 w-3" /> KTP terverifikasi
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {(p.skills ?? []).slice(0, 6).map((s) => (
                           <span key={s} className="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium capitalize text-primary-700">
@@ -294,7 +361,7 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                         </Link>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <ChatButton lawanId={p.id} label={'Pekerja: ' + nama} href="/cari-pekerja" teks="Chat pekerja" kecil />
+                        <KontakButton pekerjaId={p.id} nama={nama} biaya={biaya} gratis={!!p.sudah_kontak} />
                         <Link
                           href="/kerja/posting"
                           className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50"

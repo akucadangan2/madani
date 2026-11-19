@@ -61,3 +61,48 @@ export async function hapusDokumen(id: string): Promise<void> {
   revalidatePath(HAL);
   redirect(`${HAL}?ok=${encodeURIComponent('Dokumen dihapus.')}`);
 }
+
+export async function simpanDetailSkill(formData: FormData): Promise<void> {
+  const { supabase, user } = await sesi();
+  const skills = formData.getAll('skill').map(String);
+  const tahun = formData.getAll('tahun').map(String);
+  const tarif = formData.getAll('tarif').map(String);
+  const satuan = formData.getAll('satuan').map(String);
+
+  const { data: prof } = await supabase.from('profiles').select('skills').eq('id', user.id).maybeSingle();
+  const milik = new Set((prof?.skills ?? []) as string[]);
+
+  for (let i = 0; i < skills.length; i++) {
+    const skill = skills[i];
+    if (!milik.has(skill)) continue;
+    const th = (tahun[i] ?? '').replace(/\D/g, '');
+    const tf = (tarif[i] ?? '').replace(/\D/g, '');
+    const sat = satuan[i] ?? 'hari';
+    const tahunN = th === '' ? null : Number(th);
+    const tarifN = tf === '' ? 0 : Number(tf);
+
+    if (tahunN !== null && tahunN > 60) redirect(`${HAL}?error=${encodeURIComponent('Pengalaman maksimal 60 tahun.')}`);
+    if (tarifN > 100000000) redirect(`${HAL}?error=${encodeURIComponent('Tarif tidak valid.')}`);
+    if (!SATUAN.includes(sat)) redirect(`${HAL}?error=${encodeURIComponent('Satuan tarif tidak valid.')}`);
+
+    if (tahunN === null && tarifN === 0) {
+      await supabase.from('pekerja_skill').delete().eq('user_id', user.id).eq('skill', skill);
+      continue;
+    }
+    const { error } = await supabase.from('pekerja_skill').upsert(
+      {
+        user_id: user.id,
+        skill,
+        pengalaman_tahun: tahunN,
+        tarif: tarifN > 0 ? tarifN : null,
+        satuan_tarif: tarifN > 0 ? sat : null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,skill' }
+    );
+    if (error) redirect(`${HAL}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(HAL);
+  redirect(`${HAL}?ok=${encodeURIComponent('Pengalaman dan tarif keahlian disimpan.')}`);
+}

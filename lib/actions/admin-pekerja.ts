@@ -49,3 +49,23 @@ export async function bukaBlokirPengguna(fd: FormData): Promise<void> {
   revalidatePath('/admin/pekerja');
   ke(hal, { ok: 'Blokir dibuka. Pengguna bisa login lagi.' });
 }
+
+export async function ubahBiayaKontak(fd: FormData): Promise<void> {
+  if (!(await ambilAdmin())) ke('/admin/pekerja', { error: 'Hanya admin' });
+  const mentah = String(fd.get('biaya') ?? '').replace(/\D/g, '');
+  const biaya = mentah === '' ? 0 : Number(mentah);
+  if (!Number.isInteger(biaya) || biaya < 0 || biaya > 1000000) {
+    ke('/admin/pekerja', { error: 'Biaya harus antara 0 dan 1.000.000' });
+  }
+
+  const db = createAdminClient();
+  const { error } = await db
+    .from('pengaturan_biaya')
+    .upsert({ kunci: 'biaya_kontak_pekerja', nilai: biaya, diubah_at: new Date().toISOString() }, { onConflict: 'kunci' });
+  if (error) ke('/admin/pekerja', { error: error.message });
+
+  revalidatePath('/admin/pekerja');
+  ke('/admin/pekerja', {
+    ok: biaya > 0 ? `Biaya kontak pekerja Rp ${biaya.toLocaleString('id-ID')} sudah aktif` : 'Biaya kontak pekerja dimatikan (gratis)',
+  });
+}

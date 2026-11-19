@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { waktuRelatif } from '@/lib/admin/data';
 import StatusBadge from '../_components/StatusBadge';
+import { ubahBiayaKontak } from '@/lib/actions/admin-pekerja';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,12 @@ export default async function AdminPekerja({
   const { tab = 'semua', q = '', hal = '1' } = await searchParams;
   const halaman = Math.max(1, Number(hal) || 1);
   const supabase = await createClient();
+  const { data: biayaRow } = await supabase
+    .from('pengaturan_biaya')
+    .select('nilai')
+    .eq('kunci', 'biaya_kontak_pekerja')
+    .maybeSingle();
+  const biayaKontak = Number(biayaRow?.nilai ?? 0);
 
   const { data, error } = await supabase.rpc('rpc_admin_daftar_pekerja', {
     p_q: q.trim() || null,
@@ -66,6 +73,23 @@ export default async function AdminPekerja({
           Identitas, keahlian, penghasilan, dan status akun pekerja. Penghasilan dihitung dari upah tugas yang sudah selesai.
         </p>
       </div>
+
+      <form action={ubahBiayaKontak} className="flex flex-wrap items-end gap-3 rounded-2xl border border-neutral-200 bg-white p-4">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-neutral-600">Biaya kontak pekerja (Rp)</label>
+          <input
+            name="biaya"
+            inputMode="numeric"
+            defaultValue={String(biayaKontak)}
+            className="w-40 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button className="rounded-lg bg-primary-500 px-4 py-2 text-sm text-white">Simpan</button>
+        <p className="basis-full text-xs text-neutral-500">
+          Dipotong dari saldo pemberi kerja, sekali bayar per pekerja. Isi 0 untuk mematikan (kontak gratis). Status sekarang:{' '}
+          {biayaKontak > 0 ? `aktif Rp ${biayaKontak.toLocaleString('id-ID')}` : 'mati (gratis)'}.
+        </p>
+      </form>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
