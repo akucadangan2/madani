@@ -1,6 +1,7 @@
 {
   "regions": ["sin1"],
   "crons": [
-    { "path": "/api/cron/hapus-ktp", "schedule": "0 20 * * *" }
+    { "path": "/api/cron/hapus-ktp", "schedule": "0 20 * * *" },
+    { "path": "/api/doku/rekonsiliasi", "schedule": "30 21 * * *" }
   ]
 }
