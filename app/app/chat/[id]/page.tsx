@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { kirimPesan } from '@/lib/actions/chat';
+import { kirimPesan, hapusRiwayat } from '@/lib/actions/chat';
 import AutoRefresh from '../_components/auto-refresh';
 import ScrollBawah from '../_components/scroll-bawah';
 import KirimForm from '../_components/kirim-form';
@@ -46,13 +46,8 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
 
   await supabase.rpc('rpc_tandai_dibaca', { p_percakapan_id: id });
 
-  const { data: pData } = await supabase
-    .from('pesan')
-    .select('id, pengirim_id, isi, created_at, dibaca_at')
-    .eq('percakapan_id', id)
-    .order('created_at', { ascending: false })
-    .limit(200);
-  const pesan = ((pData ?? []) as Pesan[]).slice().reverse();
+  const { data: pData } = await supabase.rpc('app_pesan_chat', { p_percakapan_id: id });
+  const pesan = (pData ?? []) as Pesan[];
 
   return (
     <div className="mx-auto max-w-xl px-4 pb-4 pt-4">
@@ -80,6 +75,18 @@ export default async function ChatRoomPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </div>
+
+      <details className="mt-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+        <summary className="cursor-pointer text-xs font-medium text-neutral-600">Hapus riwayat chat</summary>
+        <form action={hapusRiwayat.bind(null, id)} className="mt-2 space-y-2">
+          <p className="text-xs text-neutral-500">
+            Semua pesan di percakapan ini dihapus dari tampilanmu. Pesan lawan bicara tidak ikut terhapus, dan percakapan muncul lagi bila ada pesan baru.
+          </p>
+          <button className="rounded-full border border-red-300 bg-white px-4 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
+            Ya, hapus riwayat
+          </button>
+        </form>
+      </details>
 
       <div className="mt-4 space-y-2">
         {pesan.length === 0 && (

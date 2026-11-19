@@ -229,7 +229,15 @@ export default async function PesananPage({
               )}
 
               {p.status === 'selesai' && !kmp && (
-                <p className="mt-2 text-xs text-neutral-500">Ketuk nama produk untuk memberi ulasan.</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+                  <Link
+                    href={`/marketplace/toko/${p.toko_id}`}
+                    className="inline-flex items-center rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+                  >
+                    Beri ulasan toko
+                  </Link>
+                  <span>Atau ketuk nama produk untuk mengulas produknya.</span>
+                </div>
               )}
             </div>
           );

@@ -46,3 +46,11 @@ export async function mulaiPercakapan(lawanBicaraId: string): Promise<string | u
   });
   return data ? String(data) : undefined;
 }
+
+// Hapus riwayat chat dari tampilan pengguna ini saja. Pesan lawan bicara tidak ikut terhapus.
+export async function hapusRiwayat(percakapanId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('rpc_hapus_riwayat_chat', { p_percakapan_id: percakapanId });
+  if (error) redirect('/chat?error=' + encodeURIComponent(error.message));
+  redirect('/chat');
+}

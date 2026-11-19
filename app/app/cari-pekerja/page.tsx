@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowLeft, Search, MapPin, Plus, ChevronRight, ChevronDown, Users, FileText } from 'lucide-react';
+import {
+  ArrowLeft, Search, MapPin, Plus, ChevronRight, ChevronDown, Users, FileText,
+  Home, Sprout, PawPrint, Hammer, Truck, HeartHandshake, Store, PartyPopper, Laptop, Wrench,
+  TreePine, GraduationCap, ShieldCheck, Umbrella, Sparkles, MoreHorizontal,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import ChatButton from '@/app/app/chat/_components/chat-button';
 
@@ -18,6 +23,33 @@ type Pekerja = {
   satuan_tarif: string | null;
   jumlah_dokumen: number | null;
 };
+
+function pilihIkon(nama: string): LucideIcon {
+  const n = nama.toLowerCase();
+  if (n.includes('pertanian') || n.includes('perkebunan')) return Sprout;
+  if (n.includes('peternakan') || n.includes('perikanan')) return PawPrint;
+  if (n.includes('rumah tangga') || n.includes('hunian')) return Home;
+  if (n.includes('bangunan')) return Hammer;
+  if (n.includes('transportasi')) return Truck;
+  if (n.includes('pendidikan') || n.includes('belajar')) return GraduationCap;
+  if (n.includes('sosial') || n.includes('pendampingan')) return HeartHandshake;
+  if (n.includes('perdagang') || n.includes('umkm')) return Store;
+  if (n.includes('event') || n.includes('komunitas')) return PartyPopper;
+  if (n.includes('teknologi') || n.includes('digital')) return Laptop;
+  if (n.includes('kendaraan') || n.includes('peralatan')) return Wrench;
+  if (n.includes('lingkungan') || n.includes('fasilitas umum')) return TreePine;
+  if (n.includes('administrasi') || n.includes('layanan publik')) return FileText;
+  if (n.includes('keamanan')) return ShieldCheck;
+  if (n.includes('pariwisata') || n.includes('hospitality')) return Umbrella;
+  if (n.includes('kecantikan') || n.includes('perawatan diri')) return Sparkles;
+  if (n.includes('lainnya')) return MoreHorizontal;
+  return Users;
+}
+
+function IkonKategori({ nama, className }: { nama: string; className?: string }) {
+  const Ikon = pilihIkon(nama);
+  return <Ikon className={className} />;
+}
 
 function buatHref(sp: SP, o: Partial<SP>) {
   const m = { ...sp, ...o };
@@ -47,24 +79,41 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
   ]);
   const semua = (data ?? []) as Pekerja[];
 
-  // Kategori = keahlian yang diisi pekerja, dihitung jumlah pekerjanya
-  const hitung = new Map<string, { nama: string; n: number }>();
-  for (const p of semua) {
+  // Kategori mengikuti tabel kategori yang diatur admin. Keahlian pekerja dicocokkan ke sub kategorinya;
+  // keahlian yang tidak cocok masuk ke "Lainnya".
+  const [{ data: katData }, { data: subData }] = await Promise.all([
+    supabase.from('kategori').select('id, nama').eq('tipe', 'kerja').order('urutan').order('nama'),
+    supabase.from('kategori_sub').select('kategori_id, nama'),
+  ]);
+  const subKeKategori = new Map<string, string>();
+  for (const s of (subData ?? []) as { kategori_id: string; nama: string }[]) {
+    subKeKategori.set(s.nama.trim().toLowerCase(), s.kategori_id);
+  }
+  const LAINNYA = 'lainnya';
+  const grupPekerja = (p: Pekerja): Set<string> => {
+    const g = new Set<string>();
     for (const s of p.skills ?? []) {
       const key = s.trim().toLowerCase();
-      if (!key) continue;
-      const cur = hitung.get(key) ?? { nama: s.trim(), n: 0 };
-      cur.n += 1;
-      hitung.set(key, cur);
+      if (key) g.add(subKeKategori.get(key) ?? LAINNYA);
     }
+    return g;
+  };
+  const hitung = new Map<string, number>();
+  for (const p of semua) {
+    for (const id of grupPekerja(p)) hitung.set(id, (hitung.get(id) ?? 0) + 1);
   }
-  const kategori = [...hitung.values()].sort((a, b) => b.n - a.n || a.nama.localeCompare(b.nama));
+  const kategori = [
+    ...((katData ?? []) as { id: string; nama: string }[])
+      .filter((c) => c.nama.trim().toLowerCase() !== 'lainnya')
+      .map((c) => ({ id: c.id, nama: c.nama, n: hitung.get(c.id) ?? 0 })),
+    { id: LAINNYA, nama: 'Lainnya', n: hitung.get(LAINNYA) ?? 0 },
+  ].filter((c) => c.n > 0);
 
   const modeDaftar = q !== '' || k !== '';
   const daftar = q
     ? semua
     : k
-      ? semua.filter((p) => (p.skills ?? []).some((s) => s.trim().toLowerCase() === k.toLowerCase()))
+      ? semua.filter((p) => grupPekerja(p).has(k))
       : [];
 
   return (
@@ -154,12 +203,17 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                 {kategori.map((c) => (
                   <Link
                     key={c.nama}
-                    href={buatHref(sp, { k: c.nama, q: undefined })}
+                    href={buatHref(sp, { k: c.id, q: undefined })}
                     className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white p-4 transition hover:border-primary-300 hover:shadow-md hover:shadow-primary-500/5"
                   >
-                    <span className="min-w-0">
-                      <span className="block truncate font-semibold capitalize text-neutral-900">{c.nama}</span>
-                      <span className="block text-sm text-neutral-500">{c.n} pekerja</span>
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
+                        <IkonKategori nama={c.nama} className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-semibold text-neutral-900">{c.nama}</span>
+                        <span className="block text-sm text-neutral-500">{c.n} pekerja</span>
+                      </span>
                     </span>
                     <ChevronRight className="h-5 w-5 shrink-0 text-neutral-300" />
                   </Link>
@@ -177,7 +231,7 @@ export default async function CariPekerjaPage({ searchParams }: { searchParams: 
                 <ArrowLeft className="h-4 w-4" /> Semua kategori
               </Link>
               <p className="text-sm text-neutral-500">
-                {q ? 'Hasil untuk "' + q + '"' : 'Kategori: ' + k} - {daftar.length} pekerja
+                {q ? 'Hasil untuk "' + q + '"' : 'Kategori: ' + (kategori.find((c) => c.id === k)?.nama ?? k)} - {daftar.length} pekerja
               </p>
             </div>
 
