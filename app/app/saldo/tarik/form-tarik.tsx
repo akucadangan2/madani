@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { createClient } from '@/lib/supabase/client';
+import PilihBank, { type BankRef } from './pilih-bank';
 
 type Rincian = {
   jumlah: number;
@@ -62,12 +63,13 @@ export default function FormTarik({
 }: {
   saldo: number;
   namaDefault: string;
-  bank: string[];
+  bank: BankRef[];
   aksi: (formData: FormData) => Promise<void>;
 }) {
   const [teks, setTeks] = useState('');
   const [r, setR] = useState<Rincian | null>(null);
   const [gagalMuat, setGagalMuat] = useState(false);
+  const [bankOk, setBankOk] = useState(false);
   const urut = useRef(0);
   const jumlah = Number(teks.replace(/\D/g, '')) || 0;
 
@@ -99,7 +101,7 @@ export default function FormTarik({
   const terlaluKecil = jumlah > 0 && jumlah < min;
   const kelebihan = jumlah > saldo;
   const diterimaHabis = !!r && jumlah > 0 && r.diterima <= 0;
-  const bisaKirim = jumlah >= min && !kelebihan && !diterimaHabis;
+  const bisaKirim = jumlah >= min && !kelebihan && !diterimaHabis && bankOk;
 
   const input =
     'w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-3 text-sm outline-none focus:border-neutral-400';
@@ -174,15 +176,7 @@ export default function FormTarik({
         )}
       </div>
 
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-neutral-800">Bank / e-wallet</label>
-        <input name="bank_nama" list="daftar-bank" required placeholder="Contoh: BRI" className={input} />
-        <datalist id="daftar-bank">
-          {bank.map((b) => (
-            <option key={b} value={b} />
-          ))}
-        </datalist>
-      </div>
+      <PilihBank bank={bank} onPilih={(b) => setBankOk(!!b)} />
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-neutral-800">Nomor rekening</label>

@@ -14,6 +14,7 @@ type Baris = {
   biaya_total: number | string | null;
   jadwal_cair: string | null;
   bank_nama: string | null;
+  bank_kode: string | null;
   bank_rekening: string | null;
   bank_atas_nama: string | null;
   diproses_at: string | null;
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
   let q = supabase
     .from('penarikan_dana')
     .select(
-      'id, user_id, jumlah, jumlah_bersih, biaya_total, jadwal_cair, bank_nama, bank_rekening, bank_atas_nama, diproses_at, selesai_at, bukti_ref'
+      'id, user_id, jumlah, jumlah_bersih, biaya_total, jadwal_cair, bank_nama, bank_kode, bank_rekening, bank_atas_nama, diproses_at, selesai_at, bukti_ref'
     );
 
   if (batch) {
@@ -75,6 +76,7 @@ export async function GET(req: Request) {
       'No',
       'Nama pengguna',
       'Bank',
+      'Kode bank',
       'No. rekening',
       'Atas nama',
       'Jumlah transfer (Rp)',
@@ -91,6 +93,7 @@ export async function GET(req: Request) {
         i + 1,
         nama.get(r.user_id) ?? '-',
         r.bank_nama ?? '',
+        r.bank_kode ?? '',
         r.bank_rekening ?? '',
         r.bank_atas_nama ?? '',
         Math.round(Number(r.jumlah_bersih ?? r.jumlah)),

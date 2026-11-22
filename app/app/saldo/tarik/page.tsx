@@ -7,7 +7,7 @@ import { ambilSaldo } from '@/lib/saldo';
 import { rupiah } from '@/lib/admin/data';
 import FormTarik from './form-tarik';
 
-const BANK = ['BCA', 'BRI', 'BNI', 'Mandiri', 'BSI', 'CIMB Niaga', 'Permata', 'DANA', 'OVO', 'GoPay', 'ShopeePay'];
+// Daftar bank diambil dari tabel bank_ref (kode bank sesuai DOKU)
 
 function gagal(pesan: string): never {
   redirect('/saldo/tarik?error=' + encodeURIComponent(pesan));
@@ -17,10 +17,11 @@ async function ajukan(formData: FormData): Promise<void> {
   'use server';
   const jumlah = Number(String(formData.get('jumlah') ?? '').replace(/\D/g, ''));
   const bank = String(formData.get('bank_nama') ?? '').trim().slice(0, 50);
+  const bankKode = String(formData.get('bank_kode') ?? '').trim().slice(0, 10);
   const rekening = String(formData.get('bank_rekening') ?? '').replace(/\s/g, '').slice(0, 30);
   const atasNama = String(formData.get('bank_atas_nama') ?? '').trim().slice(0, 100);
 
-  if (!bank) gagal('Nama bank wajib diisi');
+  if (!bank || !bankKode) gagal('Pilih bank dari daftar');
   if (!/^\d{5,30}$/.test(rekening)) gagal('Nomor rekening harus berupa angka');
   if (!atasNama) gagal('Nama pemilik rekening wajib diisi');
   if (!Number.isFinite(jumlah) || jumlah <= 0) gagal('Isi jumlah penarikan');
@@ -41,6 +42,7 @@ async function ajukan(formData: FormData): Promise<void> {
     jumlah,
     status: 'menunggu',
     bank_nama: bank,
+    bank_kode: bankKode,
     bank_rekening: rekening,
     bank_atas_nama: atasNama,
   });
@@ -86,9 +88,10 @@ export default async function TarikPage({
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const [{ saldo, diproses }, { data: profil }] = await Promise.all([
+  const [{ saldo, diproses }, { data: profil }, { data: bankRef }] = await Promise.all([
     ambilSaldo(supabase, user.id),
     supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
+    supabase.from('bank_ref').select('kode, nama, nama_tampil, alias, populer').eq('aktif', true).order('urutan').order('nama'),
   ]);
   const namaDefault = (profil as { full_name?: string | null } | null)?.full_name ?? '';
 
@@ -116,7 +119,7 @@ export default async function TarikPage({
           sebelum mengajukan lagi.
         </div>
       ) : (
-        <FormTarik saldo={saldo} namaDefault={namaDefault} bank={BANK} aksi={ajukan} />
+        <FormTarik saldo={saldo} namaDefault={namaDefault} bank={bankRef ?? []} aksi={ajukan} />
       )}
     </div>
   );
