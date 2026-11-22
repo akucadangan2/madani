@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { rupiah } from '@/lib/admin/data';
+import PratinjauHp from './pratinjau-hp';
 
 type Umum = {
   min_tarik: number | string;
@@ -277,7 +278,8 @@ export default async function PengaturanPenarikan({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+      <div className="min-w-0 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold text-neutral-900">Aturan Penarikan</h1>
@@ -309,6 +311,15 @@ export default async function PengaturanPenarikan({
           setelah sebagian besar pengguna memperbarui aplikasi, supaya rincian biaya tampil di aplikasi mereka.
         </div>
       )}
+
+      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        <div className="font-semibold">Cara mengatur, 3 langkah</div>
+        <ol className="mt-1.5 list-decimal space-y-1 pl-5">
+          <li>Isi nilai biaya di bagian Komponen biaya penarikan, lalu klik Simpan pada baris itu.</li>
+          <li>Centang Terapkan biaya potongan ke penarikan baru, lalu klik Simpan aturan umum.</li>
+          <li>Lihat hasilnya di layar HP tiruan. Itu yang dilihat pengguna di aplikasi dan web.</li>
+        </ol>
+      </div>
 
       {/* Umum */}
       <form action={simpanUmum} className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5">
@@ -598,6 +609,13 @@ export default async function PengaturanPenarikan({
           </ul>
         )}
       </section>
+      </div>
+      <aside className="lg:sticky lg:top-20">
+        <PratinjauHp
+          key={`${umum.updated_at}|${umum.biaya_aktif}|${aturan.map((x) => `${x.id}${x.nilai}${x.min_biaya}${x.maks_biaya}${x.kena_ppn}${x.aktif}`).join(',')}`}
+          biayaAktif={umum.biaya_aktif}
+        />
+      </aside>
     </div>
   );
 }
