@@ -22,6 +22,11 @@ type Row = {
   selesai_at: string | null;
   nama: string;
   saldo: number;
+  jadwal_cair: string | null;
+  biaya_total: number | string | null;
+  jumlah_bersih: number | string | null;
+  batch_id: string | null;
+  batch_kode: string | null;
 };
 
 type Hasil = { total: number; total_jumlah: number; rows: Row[] };
@@ -61,6 +66,17 @@ function tgl(v: string | null) {
         month: 'short',
         hour: '2-digit',
         minute: '2-digit',
+      })
+    : '';
+}
+
+function tglHari(v: string | null) {
+  return v
+    ? new Date(v + 'T12:00:00+07:00').toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
       })
     : '';
 }
@@ -184,9 +200,17 @@ export default async function AdminPencairan({
             Alur: Setujui (saldo dipotong, masuk antrean), transfer berkala, lalu Tandai sudah ditransfer.
           </p>
         </div>
-        <Link href="/admin/panduan" className="text-sm font-medium text-secondary-700 hover:underline">
-          Lihat panduan keuangan
-        </Link>
+        <div className="flex flex-wrap gap-4 text-sm font-medium text-secondary-700">
+          <Link href="/admin/pencairan-dana/agenda" className="hover:underline">
+            Agenda transfer
+          </Link>
+          <Link href="/admin/pengaturan-penarikan" className="hover:underline">
+            Aturan penarikan
+          </Link>
+          <Link href="/admin/panduan" className="hover:underline">
+            Lihat panduan keuangan
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -357,7 +381,11 @@ export default async function AdminPencairan({
                         />
                       </td>
                     )}
-                    <td className="whitespace-nowrap px-3 py-2 align-top text-neutral-600">{tgl(r.created_at)}</td>
+                    <td className="whitespace-nowrap px-3 py-2 align-top text-neutral-600">{tgl(r.created_at)}
+                      {r.jadwal_cair && (r.status === PENARIKAN.MENUNGGU || r.status === PENARIKAN.SETUJU) && (
+                        <div className="text-[11px] font-medium text-blue-700">Cair {tglHari(r.jadwal_cair)}</div>
+                      )}
+                    </td>
                     <td className="px-3 py-2 align-top font-medium text-neutral-900">{r.nama}</td>
                     <td className="px-3 py-2 align-top">
                       <div className="font-medium text-neutral-800">
@@ -372,6 +400,11 @@ export default async function AdminPencairan({
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-right align-top font-semibold text-neutral-900">
                       {rupiah(r.jumlah)}
+                      {Number(r.biaya_total ?? 0) > 0 && (
+                        <div className="text-[11px] font-normal text-neutral-500">
+                          Potongan {rupiah(r.biaya_total ?? 0)}, diterima {rupiah(r.jumlah_bersih ?? r.jumlah)}
+                        </div>
+                      )}
                     </td>
                     <td
                       className={`whitespace-nowrap px-3 py-2 text-right align-top ${
@@ -395,6 +428,7 @@ export default async function AdminPencairan({
                         <div className="text-[11px] text-neutral-500">Ditransfer {tgl(r.selesai_at)}</div>
                       )}
                       {r.bukti_ref && <div className="font-mono text-[11px] text-neutral-500">{r.bukti_ref}</div>}
+                      {r.batch_kode && <div className="text-[11px] text-blue-700">Paket {r.batch_kode}</div>}
                       {r.catatan_admin && <div className="text-[11px] text-neutral-500">Catatan: {r.catatan_admin}</div>}
                     </td>
                   </tr>

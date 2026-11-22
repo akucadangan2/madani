@@ -19,6 +19,7 @@ import {
   Percent,
   Receipt,
   ShieldCheck,
+  SlidersHorizontal,
   Store,
   Tags,
   UserCog,
@@ -47,6 +48,7 @@ const NAV: { judul: string; items: Item[] }[] = [
     items: [
       { href: '/admin/transaksi', label: 'Transaksi', icon: Receipt },
       { href: '/admin/pencairan-dana', label: 'Pencairan Dana', icon: Banknote, badge: 'penarikan' },
+      { href: '/admin/pengaturan-penarikan', label: 'Aturan Penarikan', icon: SlidersHorizontal },
       { href: '/admin/setoran-kecamatan', label: 'Setoran Kecamatan', icon: Landmark },
       { href: '/admin/komplain', label: 'Komplain', icon: AlertTriangle, badge: 'komplain' },
       { href: '/admin/laporan', label: 'Laporan', icon: BarChart3 },
